@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm add:*)",
+      "Bash(npx tailwindcss init -p)",
+      "Bash(pnpm dlx tailwindcss:*)",
+      "Bash(pnpm dlx:*)",
+      "Bash(pnpm run build)",
+      "Bash(cargo check:*)"
+    ]
+  }
+}
