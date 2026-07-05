@@ -4,11 +4,17 @@ import { ProfileSetup } from "@/components/profile/ProfileSetup";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useUserStore } from "@/stores/userStore";
 import { useAppStore } from "@/stores/appStore";
+import { useScanStore } from "@/stores/scanStore";
 
 function App() {
   const { profile } = useUserStore();
-  const { showOnboarding, showProfileSetup, setShowOnboarding, setShowProfileSetup } =
-    useAppStore();
+  const {
+    showOnboarding,
+    showProfileSetup,
+    setShowOnboarding,
+    setShowProfileSetup,
+  } = useAppStore();
+  const { setScanMode, startScan, isScanning } = useScanStore();
 
   // Check if user has completed onboarding
   useEffect(() => {
@@ -30,9 +36,16 @@ function App() {
     setShowProfileSetup(true);
   };
 
-  // Handle profile setup completion
-  const handleProfileComplete = () => {
+  // Handle profile setup completion -> go to dashboard + start background scan
+  const handleProfileComplete = (scanMode: "entire" | "folder") => {
     setShowProfileSetup(false);
+    setScanMode(scanMode);
+    // Start background scan after a brief delay to let the dashboard mount
+    setTimeout(() => {
+      if (!isScanning) {
+        startScan();
+      }
+    }, 100);
   };
 
   // Handle profile setup skip
@@ -60,7 +73,7 @@ function App() {
     );
   }
 
-  // Show main application
+  // Show main application (dashboard with background scanning)
   return <MainLayout />;
 }
 

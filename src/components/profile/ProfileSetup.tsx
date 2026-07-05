@@ -1,49 +1,103 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, X } from "lucide-react";
+import { LanguageStep } from "./LanguageStep";
 import { UsageTypeStep } from "./UsageTypeStep";
 import { ActivityStep } from "./ActivityStep";
+import { ProjectTypesStep } from "./ProjectTypesStep";
+import { OrganizationStyleStep } from "./OrganizationStyleStep";
 import { ConfirmationStep } from "./ConfirmationStep";
 import { useUserStore } from "@/stores/userStore";
 import type { UserProfile } from "@/lib/tauri";
 
 interface ProfileSetupProps {
-  onComplete: () => void;
+  onComplete: (scanMode: "entire" | "folder") => void;
   onSkip: () => void;
 }
 
-const steps = [UsageTypeStep, ActivityStep, ConfirmationStep];
+export interface ProfileFormData {
+  language: string;
+  usageType: "personal" | "work" | "both";
+  activities: string[];
+  customActivity: string;
+  projectTypes: string[];
+  organizationStyle: string[];
+  primaryFileTypes: string[];
+  storageHabits: {
+    uses_multiple_drives: boolean;
+    uses_cloud_storage: string[];
+    uses_external_storage: boolean;
+  };
+  scanMode: "entire" | "folder" | null;
+}
+
+const steps = [
+  LanguageStep,
+  UsageTypeStep,
+  ActivityStep,
+  ProjectTypesStep,
+  OrganizationStyleStep,
+  ConfirmationStep,
+];
 
 export function ProfileSetup({ onComplete, onSkip }: ProfileSetupProps) {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [direction, setDirection] = useState(0);
-  const [usageType, setUsageType] = useState<"personal" | "work" | "both">("personal");
-  const [activities, setActivities] = useState<string[]>([]);
-  const [customActivity, setCustomActivity] = useState("");
+  const [formData, setFormData] = useState<ProfileFormData>({
+    language: "en",
+    usageType: "personal",
+    activities: [],
+    customActivity: "",
+    projectTypes: [],
+    organizationStyle: [],
+    primaryFileTypes: [],
+    storageHabits: {
+      uses_multiple_drives: false,
+      uses_cloud_storage: [],
+      uses_external_storage: false,
+    },
+    scanMode: null,
+  });
 
-  const { setProfile } = useUserStore();
+  const { setProfile, setLanguage } = useUserStore();
 
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === steps.length - 1;
 
+  const updateFormData = (updates: Partial<ProfileFormData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }));
+    if (updates.language) {
+      setLanguage(updates.language);
+    }
+  };
+
+  const saveProfileAndComplete = (scanMode: "entire" | "folder") => {
+    const profile: UserProfile = {
+      language: formData.language,
+      usage_type: formData.usageType,
+      activities: formData.customActivity
+        ? [...formData.activities, formData.customActivity]
+        : formData.activities,
+      project_types: formData.projectTypes,
+      organization_style: formData.organizationStyle,
+      primary_file_types: formData.primaryFileTypes,
+      storage_habits: formData.storageHabits,
+      onboarding_completed: true,
+      created_at: new Date().toISOString(),
+    };
+    setProfile(profile);
+    onComplete(scanMode);
+  };
+
   const goToNext = () => {
-    if (isLastStep) {
-      // Save profile and complete
-      const profile: UserProfile = {
-        usage_type: usageType,
-        activities: customActivity
-          ? [...activities, customActivity]
-          : activities,
-        onboarding_completed: true,
-        created_at: new Date().toISOString(),
-      };
-      setProfile(profile);
-      onComplete();
-    } else {
+    if (!isLastStep) {
       setDirection(1);
       setCurrentStep((prev) => prev + 1);
     }
+    // On last step, buttons are handled by scan mode selection
   };
 
   const goToPrev = () => {
@@ -80,7 +134,7 @@ export function ProfileSetup({ onComplete, onSkip }: ProfileSetupProps) {
           onClick={onSkip}
           className="text-muted-foreground hover:text-foreground"
         >
-          Skip
+          {t("common.skip")}
           <X className="w-4 h-4 ml-1" />
         </Button>
       </div>
@@ -95,13 +149,13 @@ export function ProfileSetup({ onComplete, onSkip }: ProfileSetupProps) {
             className="text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
-            Back
+            {t("common.back")}
           </Button>
         </div>
       )}
 
       {/* Progress bar */}
-      <div className="absolute top-16 left-1/2 -translate-x-1/2 w-full max-w-md px-8">
+      <div className="absolute top-16 left-1/2 -translate-x-1/2 w-full max-w-md px-8 z-10">
         <div className="h-1 bg-surface rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-primary"
@@ -111,12 +165,15 @@ export function ProfileSetup({ onComplete, onSkip }: ProfileSetupProps) {
           />
         </div>
         <p className="text-center text-xs text-muted-foreground mt-2">
-          Step {currentStep + 1} of {steps.length}
+          {t("profile.stepOf", {
+            current: currentStep + 1,
+            total: steps.length,
+          })}
         </p>
       </div>
 
       {/* Step content */}
-      <div className="flex-1 flex items-center justify-center overflow-hidden px-8 pt-24">
+      <div className="flex-1 flex items-center justify-center overflow-y-auto px-8 pt-28 pb-4">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={currentStep}
@@ -132,12 +189,8 @@ export function ProfileSetup({ onComplete, onSkip }: ProfileSetupProps) {
             className="w-full max-w-2xl"
           >
             <CurrentStepComponent
-              usageType={usageType}
-              setUsageType={setUsageType}
-              activities={activities}
-              setActivities={setActivities}
-              customActivity={customActivity}
-              setCustomActivity={setCustomActivity}
+              formData={formData}
+              updateFormData={updateFormData}
               onContinue={goToNext}
             />
           </motion.div>
@@ -145,10 +198,30 @@ export function ProfileSetup({ onComplete, onSkip }: ProfileSetupProps) {
       </div>
 
       {/* Navigation */}
-      <div className="flex items-center justify-center px-8 py-6">
-        <Button onClick={goToNext} size="lg" className="px-8">
-          {isLastStep ? "Start Using Foldefy" : "Continue"}
-        </Button>
+      <div className="flex items-center justify-center px-8 py-4 gap-3 flex-shrink-0">
+        {isLastStep ? (
+          <>
+            <Button
+              onClick={() => saveProfileAndComplete("entire")}
+              size="lg"
+              className="px-6"
+            >
+              {t("scanning.entireStorage")}
+            </Button>
+            <Button
+              onClick={() => saveProfileAndComplete("folder")}
+              size="lg"
+              variant="secondary"
+              className="px-6"
+            >
+              {t("scanning.specificFolder")}
+            </Button>
+          </>
+        ) : (
+          <Button onClick={goToNext} size="lg" className="px-8">
+            {t("common.continue")}
+          </Button>
+        )}
       </div>
     </div>
   );

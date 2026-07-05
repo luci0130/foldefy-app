@@ -4,6 +4,7 @@ import { useAppStore } from "@/stores/appStore";
 import { Dashboard } from "@/pages/Dashboard";
 import { Organize } from "@/pages/Organize";
 import { Marketplace } from "@/pages/Marketplace";
+import { FolderExplorer } from "@/pages/FolderExplorer";
 import { Settings } from "@/pages/Settings";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -11,6 +12,7 @@ const pageComponents = {
   dashboard: Dashboard,
   organize: Organize,
   marketplace: Marketplace,
+  folders: FolderExplorer,
   settings: Settings,
 };
 

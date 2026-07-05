@@ -1,14 +1,17 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import i18n from "@/i18n";
 import type { UserProfile } from "@/lib/tauri";
 
 interface UserState {
   profile: UserProfile | null;
+  language: string;
   onboardingStep: number;
   profileSetupStep: number;
   isLoading: boolean;
   setProfile: (profile: UserProfile) => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
+  setLanguage: (lang: string) => void;
   setOnboardingStep: (step: number) => void;
   setProfileSetupStep: (step: number) => void;
   setLoading: (loading: boolean) => void;
@@ -20,6 +23,7 @@ export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
       profile: null,
+      language: "en",
       onboardingStep: 0,
       profileSetupStep: 0,
       isLoading: false,
@@ -32,6 +36,11 @@ export const useUserStore = create<UserState>()(
             ? { ...state.profile, ...updates }
             : null,
         })),
+
+      setLanguage: (lang) => {
+        i18n.changeLanguage(lang);
+        set({ language: lang });
+      },
 
       setOnboardingStep: (step) => set({ onboardingStep: step }),
 
@@ -49,6 +58,7 @@ export const useUserStore = create<UserState>()(
       reset: () =>
         set({
           profile: null,
+          language: "en",
           onboardingStep: 0,
           profileSetupStep: 0,
           isLoading: false,
@@ -56,6 +66,11 @@ export const useUserStore = create<UserState>()(
     }),
     {
       name: "foldefy-user",
+      onRehydrateStorage: () => (state) => {
+        if (state?.language) {
+          i18n.changeLanguage(state.language);
+        }
+      },
     }
   )
 );

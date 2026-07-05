@@ -3,6 +3,7 @@ import { useAppStore } from "@/stores/appStore";
 import {
   Home,
   FolderOpen,
+  FolderTree,
   ShoppingBag,
   Settings,
   ChevronLeft,
@@ -14,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 const navItems = [
   { id: "dashboard" as const, label: "Dashboard", icon: Home },
   { id: "organize" as const, label: "Organize", icon: FolderOpen },
+  { id: "folders" as const, label: "Folders", icon: FolderTree },
   { id: "marketplace" as const, label: "Marketplace", icon: ShoppingBag },
   { id: "settings" as const, label: "Settings", icon: Settings },
 ];
