@@ -117,6 +117,14 @@ export interface ScanProgress {
   percentage: number;
 }
 
+/** A directory with many unsorted files, suggested as a sorting target. */
+export interface Hotspot {
+  path: string;
+  loose_files: number;
+  score: number;
+  reason: string;
+}
+
 // Scanning commands
 export async function listDrives(): Promise<DriveInfo[]> {
   return invoke("list_drives");
@@ -140,6 +148,10 @@ export async function saveFolderIndex(index: FolderIndex[]): Promise<void> {
 
 export async function loadFolderIndex(): Promise<FolderIndex[] | null> {
   return invoke("load_folder_index");
+}
+
+export async function getHotspots(): Promise<Hotspot[]> {
+  return invoke("get_hotspots");
 }
 
 // AI types

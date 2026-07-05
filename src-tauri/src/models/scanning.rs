@@ -34,3 +34,12 @@ pub struct ScanProgress {
     pub drive: String,
     pub percentage: f32,
 }
+
+/// A directory with many unsorted files, suggested as a sorting target.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Hotspot {
+    pub path: String,
+    pub loose_files: u32,
+    pub score: f32,
+    pub reason: String,
+}

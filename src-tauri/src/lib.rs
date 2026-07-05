@@ -8,7 +8,7 @@ use tauri::Manager;
 
 use commands::{
     apply_template, cancel_scan, export_structure_for_ai, fetch_community_templates,
-    generate_ai_recommendation, list_drives, load_ai_config, load_annotations,
+    generate_ai_recommendation, get_hotspots, list_drives, load_ai_config, load_annotations,
     load_builtin_templates, load_folder_index, load_user_profile, save_ai_config, save_annotation,
     save_folder_index, save_user_profile, scan_all_drives, scan_directory, smart_scan_directory,
 };
@@ -37,6 +37,7 @@ pub fn run() {
             cancel_scan,
             save_folder_index,
             load_folder_index,
+            get_hotspots,
             generate_ai_recommendation,
             save_ai_config,
             load_ai_config,
