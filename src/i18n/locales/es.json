@@ -206,7 +206,14 @@
     "apiKeyDesc": "Ingresa tu propia clave API de Anthropic (opcional)",
     "apiKeyPlaceholder": "sk-ant-...",
     "usingBuiltIn": "Usando clave API integrada",
-    "usingCustom": "Usando tu clave API"
+    "usingCustom": "Usando tu clave API",
+    "applyTitle": "Aplicar esta estructura",
+    "applyWhere": "Elige dónde crear las carpetas",
+    "chooseFolder": "Elegir carpeta",
+    "willCreate": "Se crearán {{count}} carpetas",
+    "alreadyExist": "{{count}} ya existen",
+    "applied": "{{count}} carpetas creadas — se puede deshacer desde el historial",
+    "applyConfirm": "Crear {{count}} carpetas"
   },
   "templates": {
     "title": "Mercado de Plantillas",
@@ -248,7 +255,8 @@
     "indexing": "Indexando tus carpetas...",
     "indexingDesc": "Escaneando tu almacenamiento en segundo plano. Puedes seguir usando la aplicacion.",
     "indexComplete": "Indexacion Completa",
-    "viewFolders": "Ver Estructura de Carpetas"
+    "viewFolders": "Ver Estructura de Carpetas",
+    "aiOpen": "Generar recomendación"
   },
   "settings": {
     "title": "Configuracion",

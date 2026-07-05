@@ -83,6 +83,14 @@ pub struct BatchDetail {
     pub entries: Vec<JournalEntry>,
 }
 
+/// Result of applying a folder structure (AI recommendation or template).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApplyResult {
+    pub created: Vec<String>,
+    pub skipped: Vec<String>,
+    pub errors: Vec<String>,
+}
+
 /// Payload of the `sort-progress` Tauri event.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SortProgressEvent {

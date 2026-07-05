@@ -206,7 +206,14 @@
     "apiKeyDesc": "Geben Sie Ihren eigenen Anthropic API-Schlussel ein (optional)",
     "apiKeyPlaceholder": "sk-ant-...",
     "usingBuiltIn": "Eingebauter API-Schlussel wird verwendet",
-    "usingCustom": "Ihr API-Schlussel wird verwendet"
+    "usingCustom": "Ihr API-Schlussel wird verwendet",
+    "applyTitle": "Diese Struktur anwenden",
+    "applyWhere": "Wähle, wo die Ordner erstellt werden sollen",
+    "chooseFolder": "Ordner wählen",
+    "willCreate": "{{count}} Ordner werden erstellt",
+    "alreadyExist": "{{count}} existieren bereits",
+    "applied": "{{count}} Ordner erstellt — jederzeit über den Sortierverlauf rückgängig machbar",
+    "applyConfirm": "{{count}} Ordner erstellen"
   },
   "templates": {
     "title": "Vorlagen-Marktplatz",
@@ -248,7 +255,8 @@
     "indexing": "Ihre Ordner werden indexiert...",
     "indexingDesc": "Ihr Speicher wird im Hintergrund gescannt. Sie konnen die App weiter nutzen.",
     "indexComplete": "Indexierung Abgeschlossen",
-    "viewFolders": "Ordnerstruktur Anzeigen"
+    "viewFolders": "Ordnerstruktur Anzeigen",
+    "aiOpen": "Empfehlung generieren"
   },
   "settings": {
     "title": "Einstellungen",

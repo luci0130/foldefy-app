@@ -206,7 +206,14 @@
     "apiKeyDesc": "Entrez votre propre cle API Anthropic (optionnel)",
     "apiKeyPlaceholder": "sk-ant-...",
     "usingBuiltIn": "Utilisation de la cle API integree",
-    "usingCustom": "Utilisation de votre cle API"
+    "usingCustom": "Utilisation de votre cle API",
+    "applyTitle": "Appliquer cette structure",
+    "applyWhere": "Choisissez où créer les dossiers",
+    "chooseFolder": "Choisir un dossier",
+    "willCreate": "{{count}} dossiers seront créés",
+    "alreadyExist": "{{count}} existent déjà",
+    "applied": "{{count}} dossiers créés — annulable à tout moment depuis l'historique",
+    "applyConfirm": "Créer {{count}} dossiers"
   },
   "templates": {
     "title": "Marche de Modeles",
@@ -248,7 +255,8 @@
     "indexing": "Indexation de vos dossiers...",
     "indexingDesc": "Analyse de votre stockage en arriere-plan. Vous pouvez continuer a utiliser l'application.",
     "indexComplete": "Indexation Terminee",
-    "viewFolders": "Voir la Structure des Dossiers"
+    "viewFolders": "Voir la Structure des Dossiers",
+    "aiOpen": "Générer une recommandation"
   },
   "settings": {
     "title": "Parametres",

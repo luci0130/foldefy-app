@@ -115,7 +115,7 @@ export function UndoCenter({ open, onOpenChange }: UndoCenterProps) {
                         {t("sorting.failedCount", { count: batch.failed })}
                       </Badge>
                     )}
-                    {batch.done > 0 && (
+                    {(batch.done > 0 || batch.status === "executed") && (
                       <Button
                         variant="outline"
                         size="sm"

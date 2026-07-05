@@ -263,6 +263,21 @@ export async function getBatch(batchId: number): Promise<BatchDetail> {
   return invoke("get_batch", { batchId });
 }
 
+// Structure application
+export interface ApplyResult {
+  created: string[];
+  skipped: string[];
+  errors: string[];
+}
+
+export async function applyStructure(
+  recommendation: AIRecommendation,
+  targetRoot: string,
+  dryRun: boolean
+): Promise<ApplyResult> {
+  return invoke("apply_structure", { recommendation, targetRoot, dryRun });
+}
+
 // AI types
 export interface AIConfig {
   api_key: string | null;

@@ -623,6 +623,18 @@ pub async fn fetch_community_templates(
     Ok(Vec::new())
 }
 
+fn template_nodes_to_tree(
+    nodes: &[TemplateFolderNode],
+) -> Vec<crate::core::fs_ops::create_tree::TreeNode> {
+    nodes
+        .iter()
+        .map(|n| crate::core::fs_ops::create_tree::TreeNode {
+            name: n.name.clone(),
+            children: template_nodes_to_tree(&n.children),
+        })
+        .collect()
+}
+
 #[tauri::command]
 pub async fn apply_template(
     template: FolderTemplate,
@@ -634,29 +646,11 @@ pub async fn apply_template(
         return Err(format!("Target path does not exist: {}", target_path));
     }
 
-    fn create_folders(
-        parent: &std::path::Path,
-        nodes: &[TemplateFolderNode],
-        vars: &std::collections::HashMap<String, String>,
-    ) -> Result<(), String> {
-        for node in nodes {
-            let mut name = node.name.clone();
-            // Replace template variables
-            for (key, value) in vars {
-                name = name.replace(&format!("{{{{{}}}}}", key), value);
-            }
-
-            let folder_path = parent.join(&name);
-            std::fs::create_dir_all(&folder_path)
-                .map_err(|e| format!("Failed to create folder {}: {}", folder_path.display(), e))?;
-
-            if !node.children.is_empty() {
-                create_folders(&folder_path, &node.children, vars)?;
-            }
-        }
-        Ok(())
+    let nodes = template_nodes_to_tree(&template.structure);
+    let result =
+        crate::core::fs_ops::create_tree::create_tree(target, &nodes, &personalization, false);
+    if !result.errors.is_empty() {
+        return Err(result.errors.join("; "));
     }
-
-    create_folders(target, &template.structure, &personalization)?;
     Ok(())
 }

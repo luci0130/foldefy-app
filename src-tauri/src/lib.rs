@@ -7,11 +7,12 @@ mod models;
 use tauri::Manager;
 
 use commands::{
-    apply_template, cancel_scan, execute_plan, export_structure_for_ai, fetch_community_templates,
-    generate_ai_recommendation, get_batch, get_hotspots, list_batches, list_drives, load_ai_config,
-    load_annotations, load_builtin_templates, load_folder_index, load_user_profile, plan_sort,
-    save_ai_config, save_annotation, save_folder_index, save_user_profile, scan_all_drives,
-    scan_directory, smart_scan_directory, undo_batch, undo_file, undo_folder,
+    apply_structure, apply_template, cancel_scan, execute_plan, export_structure_for_ai,
+    fetch_community_templates, generate_ai_recommendation, get_batch, get_hotspots, list_batches,
+    list_drives, load_ai_config, load_annotations, load_builtin_templates, load_folder_index,
+    load_user_profile, plan_sort, save_ai_config, save_annotation, save_folder_index,
+    save_user_profile, scan_all_drives, scan_directory, smart_scan_directory, undo_batch,
+    undo_file, undo_folder,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -51,6 +52,7 @@ pub fn run() {
             load_builtin_templates,
             fetch_community_templates,
             apply_template,
+            apply_structure,
             plan_sort,
             execute_plan,
             undo_batch,

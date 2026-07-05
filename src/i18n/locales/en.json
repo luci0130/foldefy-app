@@ -206,7 +206,14 @@
     "apiKeyDesc": "Enter your own Anthropic API key (optional)",
     "apiKeyPlaceholder": "sk-ant-...",
     "usingBuiltIn": "Using built-in API key",
-    "usingCustom": "Using your API key"
+    "usingCustom": "Using your API key",
+    "applyTitle": "Apply this structure",
+    "applyWhere": "Choose where the folders should be created",
+    "chooseFolder": "Choose folder",
+    "willCreate": "{{count}} folders will be created",
+    "alreadyExist": "{{count}} already exist",
+    "applied": "{{count}} folders created — undo anytime from Sorting history",
+    "applyConfirm": "Create {{count}} folders"
   },
   "templates": {
     "title": "Template Marketplace",
@@ -248,7 +255,8 @@
     "indexing": "Indexing your folders...",
     "indexingDesc": "Scanning your storage in the background. You can keep using the app.",
     "indexComplete": "Indexing Complete",
-    "viewFolders": "View Folder Structure"
+    "viewFolders": "View Folder Structure",
+    "aiOpen": "Generate recommendation"
   },
   "settings": {
     "title": "Settings",

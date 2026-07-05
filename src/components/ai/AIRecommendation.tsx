@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { X, RefreshCw, Lightbulb } from "lucide-react";
 import { RecommendationLoader } from "./RecommendationLoader";
 import { RecommendedStructureTree } from "./RecommendedStructureTree";
+import { ApplyStructureDialog } from "./ApplyStructureDialog";
 import { useAIStore } from "@/stores/aiStore";
 import { useScanStore } from "@/stores/scanStore";
 import { useUserStore } from "@/stores/userStore";
@@ -19,6 +20,7 @@ export function AIRecommendation({ onComplete, onSkip }: AIRecommendationProps) 
   const { t } = useTranslation();
   const { profile } = useUserStore();
   const { folderIndex } = useScanStore();
+  const [applyOpen, setApplyOpen] = useState(false);
   const {
     recommendation,
     isGenerating,
@@ -159,7 +161,7 @@ export function AIRecommendation({ onComplete, onSkip }: AIRecommendationProps) 
               transition={{ delay: 0.5 }}
               className="flex gap-3"
             >
-              <Button onClick={onComplete} size="lg" className="px-8">
+              <Button onClick={() => setApplyOpen(true)} size="lg" className="px-8">
                 {t("ai.apply")}
               </Button>
               <Button onClick={generate} variant="secondary" size="lg">
@@ -173,6 +175,15 @@ export function AIRecommendation({ onComplete, onSkip }: AIRecommendationProps) 
           </div>
         ) : null}
       </div>
+
+      {recommendation && (
+        <ApplyStructureDialog
+          recommendation={recommendation}
+          open={applyOpen}
+          onOpenChange={setApplyOpen}
+          onApplied={onComplete}
+        />
+      )}
     </div>
   );
 }

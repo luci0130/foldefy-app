@@ -8,7 +8,7 @@ import { useScanStore } from "@/stores/scanStore";
 
 export function Dashboard() {
   const { t } = useTranslation();
-  const { setCurrentPage } = useAppStore();
+  const { setCurrentPage, setShowAIRecommendation } = useAppStore();
   const { isScanning, scanProgress, folderIndex, reindexAll, cancelScan } = useScanStore();
 
   const totalFolders = folderIndex?.reduce((sum, idx) => sum + idx.total_folders, 0) ?? 0;
@@ -160,7 +160,10 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-surface border-border hover:border-primary/50 transition-colors cursor-pointer group">
+        <Card
+          className="bg-surface border-border hover:border-primary/50 transition-colors cursor-pointer group"
+          onClick={() => setShowAIRecommendation(true)}
+        >
           <CardHeader>
             <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center mb-2">
               <Sparkles className="w-5 h-5 text-warning" />
@@ -175,7 +178,7 @@ export function Dashboard() {
               variant="ghost"
               className="p-0 h-auto text-primary group-hover:translate-x-1 transition-transform"
             >
-              {t("common.comingSoon")} <ArrowRight className="w-4 h-4 ml-1" />
+              {t("dashboard.aiOpen")} <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           </CardContent>
         </Card>

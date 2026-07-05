@@ -206,7 +206,14 @@
     "apiKeyDesc": "Introdu propria ta cheie API Anthropic (optional)",
     "apiKeyPlaceholder": "sk-ant-...",
     "usingBuiltIn": "Se foloseste cheia API integrata",
-    "usingCustom": "Se foloseste cheia ta API"
+    "usingCustom": "Se foloseste cheia ta API",
+    "applyTitle": "Aplică această structură",
+    "applyWhere": "Alege unde să fie create folderele",
+    "chooseFolder": "Alege folder",
+    "willCreate": "{{count}} foldere vor fi create",
+    "alreadyExist": "{{count}} există deja",
+    "applied": "{{count}} foldere create — poți anula oricând din Istoric sortări",
+    "applyConfirm": "Creează {{count}} foldere"
   },
   "templates": {
     "title": "Piata de Sabloane",
@@ -248,7 +255,8 @@
     "indexing": "Se indexeaza folderele tale...",
     "indexingDesc": "Scanam stocarea in fundal. Poti continua sa folosesti aplicatia.",
     "indexComplete": "Indexare Completa",
-    "viewFolders": "Vezi Structura de Foldere"
+    "viewFolders": "Vezi Structura de Foldere",
+    "aiOpen": "Generează recomandare"
   },
   "settings": {
     "title": "Setari",

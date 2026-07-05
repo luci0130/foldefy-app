@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { OnboardingCarousel } from "@/components/onboarding/OnboardingCarousel";
 import { ProfileSetup } from "@/components/profile/ProfileSetup";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { StorageScanSetup } from "@/components/scanning/StorageScanSetup";
+import { AIRecommendation } from "@/components/ai/AIRecommendation";
 import { useUserStore } from "@/stores/userStore";
 import { useAppStore } from "@/stores/appStore";
 import { useScanStore } from "@/stores/scanStore";
@@ -11,10 +13,15 @@ function App() {
   const {
     showOnboarding,
     showProfileSetup,
+    showStorageScan,
+    showAIRecommendation,
     setShowOnboarding,
     setShowProfileSetup,
+    setShowStorageScan,
+    setShowAIRecommendation,
+    setCurrentPage,
   } = useAppStore();
-  const { setScanMode, startScan, isScanning } = useScanStore();
+  const { setScanMode } = useScanStore();
 
   // Check if user has completed onboarding
   useEffect(() => {
@@ -36,16 +43,11 @@ function App() {
     setShowProfileSetup(true);
   };
 
-  // Handle profile setup completion -> go to dashboard + start background scan
+  // Profile setup complete -> guided storage scan -> AI recommendation
   const handleProfileComplete = (scanMode: "entire" | "folder") => {
     setShowProfileSetup(false);
     setScanMode(scanMode);
-    // Start background scan after a brief delay to let the dashboard mount
-    setTimeout(() => {
-      if (!isScanning) {
-        startScan();
-      }
-    }, 100);
+    setShowStorageScan(true);
   };
 
   // Handle profile setup skip
@@ -73,7 +75,33 @@ function App() {
     );
   }
 
-  // Show main application (dashboard with background scanning)
+  // Guided storage scan (after profile setup, or re-triggered later)
+  if (showStorageScan) {
+    return (
+      <StorageScanSetup
+        onComplete={() => {
+          setShowStorageScan(false);
+          setShowAIRecommendation(true);
+        }}
+        onSkip={() => setShowStorageScan(false)}
+      />
+    );
+  }
+
+  // AI structure recommendation (after scan, or from the Dashboard)
+  if (showAIRecommendation) {
+    return (
+      <AIRecommendation
+        onComplete={() => setShowAIRecommendation(false)}
+        onSkip={() => {
+          setShowAIRecommendation(false);
+          setCurrentPage("marketplace");
+        }}
+      />
+    );
+  }
+
+  // Show main application
   return <MainLayout />;
 }
 
