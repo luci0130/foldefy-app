@@ -1,0 +1,668 @@
+# Foldefy – Plan Brainstorming
+
+## 1. Strategie și business
+
+1. Definire **misiune, viziune, valori**
+2. Plan de afaceri simplificat
+3. Site de prezentare
+4. MVP (Minimum Viable Product)
+5. Logo, nume, slogan
+6. Înregistrarea mărcii (EUIPO, OSIM etc.)
+7. Care este flow-ul aplicației
+8. Cui i se adresează
+9. Monetizare
+
+   * ce părți sunt monetizate
+   * când
+   * după câți utilizatori (ex. după 100.000 utilizatori)
+10. Cum promovăm aplicația
+
+* recomandare directă
+* acces la încă o reorganizare totală de 100 GB
+
+11. Ce se plătește
+
+* pe volum
+* pe număr de subdirectoare
+
+12. Cine procesează datele
+13. Cum protejăm codul dacă va fi disponibil și procesatorul va rula:
+
+* pe calculatorul personal
+* pe server dedicat
+
+14. Pentru companii:
+
+* închiriere servere dedicate preconfigurate
+* programul și setările sunt protejate dacă cineva încearcă să îl deschidă sau modifice
+
+15. Centralizare fișiere din întreaga companie
+
+* utilizatorul X are contractul Y
+* utilizatorul Z are acces doar la Y sau fișiere similare
+
+16. Acces limitat pe rol și ID utilizator
+17. Conectare la cloud-uri externe
+
+* Dropbox
+* OneDrive
+* Google Drive
+* etc.
+* detectare fișiere duplicate pe toate platformele
+* funcționalitate Premium: conectare la toate platformele
+
+18. Vânzare serviciu cloud pentru fișiere / servere de memorie on-premise
+19. Share de fișiere între utilizatori
+20. Foldere inteligente
+
+* scor
+* completeness score
+* duplicate
+* priority
+
+---
+
+# Setări aplicație
+
+## 1. Numărul de nivele
+
+* Numărul de niveluri pe care să fie distribuite fișierele.
+
+## 2. Tip computer
+
+* Personal
+* Companie / de muncă
+* Gaming
+
+---
+
+## Comunitate
+
+Comunitatea poate crea structuri de foldere.
+
+Fiecare structură va avea:
+
+* Banner
+* Descriere
+* Titlu
+* Like-uri
+* Comentarii
+* Review-uri
+
+(Concept similar Google Play sau iPhone App Store.)
+
+---
+
+# Wizard configurare
+
+## 1. Identificare dispozitiv
+
+* Mobile
+* Desktop
+* Tablet
+* Consolă
+
+---
+
+## 2. Tip device
+
+Personal
+
+* Gaming
+* Școală / Facultate
+* Server Poze
+* AI / Neoficiale
+
+De muncă
+
+---
+
+## 3. Activitate principală
+
+De muncă
+
+* Contabilitate
+* Programare
+* HR
+* CEO
+* Management
+* Server
+* Media Creator
+* Fotograf
+
+---
+
+## 4. Alegere template (structură de foldere)
+
+Afișare tip grid cu:
+
+* imagine folder
+* nume
+* număr vizualizări
+* download-uri
+* review-uri
+
+Filtre:
+
+* Sortare
+* Creator
+* Preț
+
+---
+
+# Ideile principale rezultate
+
+### Business
+
+* Definirea brandului
+* MVP
+* Monetizare freemium
+* Promovare
+* Înregistrare marcă
+
+### Enterprise
+
+* Servere dedicate
+* Permisiuni pe roluri
+* Centralizare documente
+* Protecție cod și configurare
+
+### Cloud
+
+* Integrare Dropbox, OneDrive, Google Drive etc.
+* Detectare duplicate între platforme
+* Cloud propriu Foldefy
+
+### Comunitate
+
+* Marketplace de structuri de foldere
+* Review-uri
+* Rating
+* Download-uri
+* Creatori de template-uri
+
+### AI
+
+* Foldere inteligente
+* Scor de organizare
+* Detectare duplicate
+* Prioritizare automată
+* Recomandări de organizare
+
+Aceste notițe reprezintă deja baza unui **Product Requirements Document (PRD)** pentru Foldefy și pot fi transformate într-un plan complet de dezvoltare pe etape (MVP → v1 → v2 → Enterprise).
+
+Am continuat extragerea și reorganizarea notițelor. Unele zone sunt foarte estompate, așa că acolo unde nu se poate citi 100% am păstrat sensul și am marcat implicit ideea.
+
+---
+
+# Design aplicație
+
+## Layout principal
+
+### Header
+
+* Logo Foldefy
+* Search
+* Setări
+* Profil utilizator
+
+### Sidebar stânga
+
+* Structură foldere
+* Proiecte
+* School
+* Personal
+* etc.
+
+### Zona centrală
+
+* Fișiere / Navigare
+* Grid cu fișiere și foldere
+* Scroll vertical
+* Preview
+
+### Sidebar dreapta
+
+Profil template
+
+* imagine
+* nume
+* descriere
+* autor
+
+---
+
+## Wizard configurare
+
+1. Alegere limbă
+
+↓
+
+2. Tip device
+
+* Personal
+* Work
+
+↓
+
+3. Tip activitate
+
+* Programator
+* CEO
+* Manager
+* etc.
+
+↓
+
+4. Alegere template
+
+Grid cu template-uri de foldere.
+
+↓
+
+5. Customizare template
+
+* structură
+* proprietăți elemente
+* recomandări AI
+
+↓
+
+6. Selectare folder
+
+---
+
+# Template de foldere
+
+## Un template conține
+
+### Informații
+
+* nume
+* autor
+* scurtă descriere
+* descriere completă
+* homepage
+
+### Structură
+
+* folder structure
+* număr nivele
+* adâncime 1-7
+* exemplu structură
+
+Un template poate fi construit din mai multe template-uri.
+
+Exemplu:
+
+Template "Companie Transport" poate reutiliza template-uri existente.
+
+---
+
+## AI Builder
+
+Pe lângă profilurile predefinite există AI care construiește automat structura de foldere pe baza descrierii proiectului.
+
+---
+
+## Editor structură
+
+Nivel 1
+
+* Projects
+* Personal
+* School
+* Business
+
+Nivel 2
+
+* Images
+* Documents
+* Code
+
+Nivel 3
+
+* 2025
+* Events
+* Travels
+* etc.
+
+---
+
+## Proprietăți folder
+
+Fiecare folder poate avea:
+
+### Prefix
+
+* custom
+
+### Tip denumire
+
+* fix
+* autogenerated
+
+### Sufix
+
+* custom
+
+---
+
+## Variabile disponibile
+
+* date created
+* type (personal/work)
+* project name
+* număr
+* category
+* subcategory
+* version
+* author
+
+---
+
+# Organizarea fișierelor
+
+## Tip fișier
+
+* imagine
+* video
+* document
+* folder
+
+---
+
+## Domeniu
+
+* personal
+* work
+* financiar
+* medical
+* contracts
+* travel
+* learning
+* media projects
+* marketing
+* programming projects
+
+---
+
+## Structură după proiect
+
+Project X
+
+* Images
+* Documents
+* Exports
+* Backups
+
+Project Y
+
+...
+
+---
+
+## Structură după timp
+
+2025
+
+* Q1
+* Q2
+* Q3
+* Q4
+
+2026
+
+...
+
+---
+
+## Workflow utilizator
+
+* Inbox
+* Needs Review
+* Approved
+* Archived
+* Trash
+
+---
+
+## Metadata folder
+
+* date created
+* date modified
+* tags
+* color/icon
+* priority
+* path
+* owner
+* size
+* file count
+* AI category
+* sensitivity
+
+  * personal
+  * confidential
+  * work
+
+---
+
+## Alte idei
+
+* licențiere model organizare foldere
+* documentație FSOS v1.0
+* Folder System Organization System
+* template-urile create devin proprietatea companiei
+
+---
+
+# Flow aplicație
+
+1. Deschidere aplicație
+
+   * slide-uri prezentare
+
+2. Alegere utilizare
+
+* Personal
+* Work
+
+3. Activitate principală
+
+* Contabil
+* Fotograf
+* CEO
+* Programator
+* Gaming
+* Școală
+* Foto
+
+4. Alegere template
+
+5. Customizare template
+
+6. Backup & Restore
+
+* backup folder
+* backup general
+
+7. Selectare folder reorganizare
+
+sau
+
+reorganizare automată completă
+
+8. Animație mutare fișiere
+
+9. Preview
+
+* vezi unde sunt mutate
+* restore
+* mutare manuală
+* creare folder nou
+
+---
+
+# Echipe necesare
+
+## 1. Folder Intelligence Engine
+
+Responsabilități
+
+* reguli clasificare
+* tag-uri
+* metadata
+* mutare automată
+
+Construirea modelului AI care clasifică după:
+
+* path
+* nume
+* metadata
+* alte informații
+
+---
+
+## 2. Profile Management
+
+* template-uri
+* profiluri
+* marketplace
+* AI Builder
+
+---
+
+## 3. Desktop Application
+
+* design
+* implementare UI
+* integrare API
+* comunicare engine AI
+
+---
+
+## 4. Mobile Application
+
+* design
+* implementare
+
+---
+
+## Alte echipe
+
+5. Site prezentare
+
+6. Marketing
+
+7. Vânzări
+
+8. Management / CEO
+
+9. Security
+
+10. DevOps
+
+11. Legal & Licensing
+
+12. Contabilitate
+
+13. Backup & Restore
+
+---
+
+# Idei aplicație
+
+## Comparare structură
+
+Afișarea în paralel
+
+* Structura propusă
+* Structura existentă
+
+Utilizatorul vede modificările înainte de aplicare.
+
+---
+
+## Analiză structură
+
+Înainte de aplicarea template-ului:
+
+* analiză structură existentă
+* recomandări
+
+---
+
+## Organizare
+
+* screenshots
+* notițe
+
+---
+
+# Indexare
+
+Indexarea tuturor folderelor de pe device.
+
+Excludere:
+
+* Windows
+* foldere sistem
+* programe
+
+---
+
+# Categorii
+
+* Project Based
+* Type Based
+* Lingvistic
+* Cultural
+* CamelCase
+* snake_case
+* kebab-case
+
+---
+
+# Nevoile primului utilizator
+
+## Probleme
+
+* Fișiere împrăștiate peste tot.
+* Organizare automată.
+* Sugestii unde trebuie mutate.
+* Structură identică pentru proiecte.
+* Screenshots organizate pe proiect.
+* Imagini organizate:
+
+  * ani
+  * luni
+  * evenimente
+
+Exemple
+
+* Vacanțe
+* Piscină
+* Acte
+
+---
+
+## Obiective
+
+* toate firmele organizate identic
+* eliminarea fișierelor inutile
+* eliminarea duplicatelor
+* toate documentele într-un singur loc
+* clasificare după:
+
+  * carieră
+  * job
+  * hobby
+  * AI
+  * PATH
+* Downloads analizat automat și mutat în locația potrivită
+
+### Scop final
+
+* găsirea rapidă a fișierelor
+* claritate
+* eliberarea spațiului pe disc
