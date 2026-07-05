@@ -35,10 +35,7 @@ fn serialize_tree_compact(node: &FolderIndexNode, indent: usize) -> String {
     result
 }
 
-fn build_recommendation_prompt(
-    profile: &UserProfile,
-    folder_indices: &[FolderIndex],
-) -> String {
+fn build_recommendation_prompt(profile: &UserProfile, folder_indices: &[FolderIndex]) -> String {
     let mut folder_tree_str = String::new();
     for index in folder_indices {
         folder_tree_str.push_str(&format!("Drive: {}\n", index.root_path));
@@ -121,12 +118,10 @@ fn get_api_key(custom_key: &Option<String>) -> Result<String, String> {
     }
 
     // Try loading saved config
-    if let Ok(config) = load_ai_config_internal() {
-        if let Some(config) = config {
-            if let Some(key) = config.api_key {
-                if !key.is_empty() {
-                    return Ok(key);
-                }
+    if let Ok(Some(config)) = load_ai_config_internal() {
+        if let Some(key) = config.api_key {
+            if !key.is_empty() {
+                return Ok(key);
             }
         }
     }
@@ -205,11 +200,11 @@ fn load_ai_config_internal() -> Result<Option<AIConfig>, String> {
         return Ok(None);
     }
 
-    let json = fs::read_to_string(&config_path)
-        .map_err(|e| format!("Failed to read AI config: {}", e))?;
+    let json =
+        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read AI config: {}", e))?;
 
-    let config: AIConfig = serde_json::from_str(&json)
-        .map_err(|e| format!("Failed to parse AI config: {}", e))?;
+    let config: AIConfig =
+        serde_json::from_str(&json).map_err(|e| format!("Failed to parse AI config: {}", e))?;
 
     Ok(Some(config))
 }
@@ -222,8 +217,7 @@ pub async fn save_ai_config(config: AIConfig) -> Result<(), String> {
     let json = serde_json::to_string_pretty(&config)
         .map_err(|e| format!("Failed to serialize AI config: {}", e))?;
 
-    fs::write(&config_path, json)
-        .map_err(|e| format!("Failed to write AI config: {}", e))?;
+    fs::write(&config_path, json).map_err(|e| format!("Failed to write AI config: {}", e))?;
 
     Ok(())
 }

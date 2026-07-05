@@ -1,6 +1,6 @@
+use super::UserProfile;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use super::UserProfile;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FolderNode {

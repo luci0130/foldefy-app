@@ -31,11 +31,7 @@ pub async fn list_drives() -> Result<Vec<DriveInfo>, String> {
         let name = if disk.name().is_empty() {
             mount_point.clone()
         } else {
-            format!(
-                "{} ({})",
-                disk.name().to_string_lossy(),
-                mount_point
-            )
+            format!("{} ({})", disk.name().to_string_lossy(), mount_point)
         };
 
         let drive_type = match disk.kind() {
@@ -82,7 +78,6 @@ fn is_hidden(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-
 /// Detect the project type/framework of a directory by checking root-level files.
 fn detect_project_type(path: &Path) -> Option<String> {
     let entries: Vec<String> = match fs::read_dir(path) {
@@ -100,9 +95,10 @@ fn detect_project_type(path: &Path) -> Option<String> {
             .any(|e| e.to_lowercase().starts_with(&prefix.to_lowercase()))
     };
     let has_ext = |ext: &str| {
-        entries
-            .iter()
-            .any(|e| e.to_lowercase().ends_with(&format!(".{}", ext.to_lowercase())))
+        entries.iter().any(|e| {
+            e.to_lowercase()
+                .ends_with(&format!(".{}", ext.to_lowercase()))
+        })
     };
 
     // Check for subdirectory existence (for CMS detection)
@@ -230,9 +226,18 @@ fn get_installed_app_paths() -> HashSet<String> {
     let mut paths = HashSet::new();
 
     let registry_keys = [
-        (HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
-        (HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
-        (HKEY_CURRENT_USER, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+        (
+            HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+        ),
+        (
+            HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
+        ),
+        (
+            HKEY_CURRENT_USER,
+            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+        ),
     ];
 
     for (hive, subkey_path) in &registry_keys {
@@ -240,13 +245,12 @@ fn get_installed_app_paths() -> HashSet<String> {
         if let Ok(uninstall_key) = hive_key.open_subkey_with_flags(subkey_path, KEY_READ) {
             for subkey_name in uninstall_key.enum_keys().flatten() {
                 if let Ok(app_key) = uninstall_key.open_subkey_with_flags(&subkey_name, KEY_READ) {
-                    if let Ok(install_location) = app_key.get_value::<String, _>("InstallLocation") {
+                    if let Ok(install_location) = app_key.get_value::<String, _>("InstallLocation")
+                    {
                         let trimmed = install_location.trim().to_string();
                         if !trimmed.is_empty() {
-                            let normalized = trimmed
-                                .to_lowercase()
-                                .trim_end_matches('\\')
-                                .to_string();
+                            let normalized =
+                                trimmed.to_lowercase().trim_end_matches('\\').to_string();
                             if !normalized.is_empty() {
                                 paths.insert(normalized);
                             }
@@ -402,6 +406,8 @@ fn collect_shallow_children(
     children
 }
 
+// Signature gets restructured into a ScanContext in the core/scanner refactor (plan task 0.4)
+#[allow(clippy::too_many_arguments, clippy::only_used_in_recursion)]
 fn smart_scan_recursive(
     path: &Path,
     max_depth: u32,
@@ -427,7 +433,7 @@ fn smart_scan_recursive(
     let count = counter.fetch_add(1, Ordering::Relaxed);
 
     // Emit progress every 50 folders
-    if count % 50 == 0 {
+    if count.is_multiple_of(50) {
         let _ = app_handle.emit(
             "scan-progress",
             ScanProgress {
@@ -439,7 +445,7 @@ fn smart_scan_recursive(
         );
     }
 
-    let is_skipped =is_skipped_folder(path, installed_paths);
+    let is_skipped = is_skipped_folder(path, installed_paths);
 
     // Detect project type for non-skipped folders
     let project_type = if !is_skipped {
@@ -537,7 +543,11 @@ fn smart_scan_recursive(
 #[cfg(windows)]
 fn decode_utf16le_output(bytes: &[u8]) -> String {
     // Strip BOM if present, then decode pairs of bytes as UTF-16LE
-    let skip = if bytes.len() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE { 2 } else { 0 };
+    let skip = if bytes.len() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE {
+        2
+    } else {
+        0
+    };
     let u16s: Vec<u16> = bytes[skip..]
         .chunks_exact(2)
         .map(|pair| u16::from_le_bytes([pair[0], pair[1]]))
@@ -578,10 +588,7 @@ fn scan_wsl_homes(
 
         // Use read_dir directly instead of exists() — more reliable for UNC paths
         let user_dirs: Vec<_> = match fs::read_dir(home) {
-            Ok(rd) => rd
-                .flatten()
-                .filter(|e| e.path().is_dir())
-                .collect(),
+            Ok(rd) => rd.flatten().filter(|e| e.path().is_dir()).collect(),
             Err(_) => continue,
         };
 
@@ -632,7 +639,10 @@ pub async fn smart_scan_directory(
     let is_developer = is_developer.unwrap_or(false);
     let path_ref = Path::new(&path);
     if !path_ref.exists() || !path_ref.is_dir() {
-        return Err(format!("Path does not exist or is not a directory: {}", path));
+        return Err(format!(
+            "Path does not exist or is not a directory: {}",
+            path
+        ));
     }
 
     let counter = Arc::new(AtomicU32::new(0));
@@ -661,7 +671,11 @@ pub async fn smart_scan_directory(
 }
 
 #[tauri::command]
-pub async fn scan_all_drives(max_depth: Option<u32>, is_developer: Option<bool>, app_handle: AppHandle) -> Result<Vec<FolderIndex>, String> {
+pub async fn scan_all_drives(
+    max_depth: Option<u32>,
+    is_developer: Option<bool>,
+    app_handle: AppHandle,
+) -> Result<Vec<FolderIndex>, String> {
     SCAN_CANCELLED.store(false, Ordering::Relaxed);
     let depth = max_depth.unwrap_or(10);
     let is_developer = is_developer.unwrap_or(false);
@@ -724,8 +738,7 @@ pub async fn save_folder_index(index: Vec<FolderIndex>) -> Result<(), String> {
     let json = serde_json::to_string_pretty(&index)
         .map_err(|e| format!("Failed to serialize index: {}", e))?;
 
-    fs::write(&index_path, json)
-        .map_err(|e| format!("Failed to write index: {}", e))?;
+    fs::write(&index_path, json).map_err(|e| format!("Failed to write index: {}", e))?;
 
     Ok(())
 }
@@ -742,11 +755,11 @@ pub async fn load_folder_index() -> Result<Option<Vec<FolderIndex>>, String> {
         return Ok(None);
     }
 
-    let json = fs::read_to_string(&index_path)
-        .map_err(|e| format!("Failed to read index: {}", e))?;
+    let json =
+        fs::read_to_string(&index_path).map_err(|e| format!("Failed to read index: {}", e))?;
 
-    let index: Vec<FolderIndex> = serde_json::from_str(&json)
-        .map_err(|e| format!("Failed to parse index: {}", e))?;
+    let index: Vec<FolderIndex> =
+        serde_json::from_str(&json).map_err(|e| format!("Failed to parse index: {}", e))?;
 
     Ok(Some(index))
 }

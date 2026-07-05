@@ -23,8 +23,7 @@ pub async fn save_user_profile(profile: UserProfile) -> Result<(), String> {
     let json = serde_json::to_string_pretty(&profile)
         .map_err(|e| format!("Failed to serialize profile: {}", e))?;
 
-    fs::write(&profile_path, json)
-        .map_err(|e| format!("Failed to write profile: {}", e))?;
+    fs::write(&profile_path, json).map_err(|e| format!("Failed to write profile: {}", e))?;
 
     Ok(())
 }
@@ -38,11 +37,11 @@ pub async fn load_user_profile() -> Result<Option<UserProfile>, String> {
         return Ok(None);
     }
 
-    let json = fs::read_to_string(&profile_path)
-        .map_err(|e| format!("Failed to read profile: {}", e))?;
+    let json =
+        fs::read_to_string(&profile_path).map_err(|e| format!("Failed to read profile: {}", e))?;
 
-    let profile: UserProfile = serde_json::from_str(&json)
-        .map_err(|e| format!("Failed to parse profile: {}", e))?;
+    let profile: UserProfile =
+        serde_json::from_str(&json).map_err(|e| format!("Failed to parse profile: {}", e))?;
 
     Ok(Some(profile))
 }

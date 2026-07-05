@@ -1,4 +1,6 @@
-use crate::models::{FolderAnnotation, FolderNode, FolderStatistics, FolderStructureData, AIExportData, UserProfile};
+use crate::models::{
+    AIExportData, FolderAnnotation, FolderNode, FolderStatistics, FolderStructureData, UserProfile,
+};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -17,16 +19,22 @@ fn get_data_dir() -> Result<PathBuf, String> {
     Ok(data_dir)
 }
 
-fn scan_directory_recursive(path: &Path, max_depth: usize, current_depth: usize) -> Result<FolderNode, String> {
-    let metadata = fs::metadata(path)
-        .map_err(|e| format!("Failed to read metadata for {:?}: {}", path, e))?;
+fn scan_directory_recursive(
+    path: &Path,
+    max_depth: usize,
+    current_depth: usize,
+) -> Result<FolderNode, String> {
+    let metadata =
+        fs::metadata(path).map_err(|e| format!("Failed to read metadata for {:?}: {}", path, e))?;
 
-    let name = path.file_name()
+    let name = path
+        .file_name()
         .map(|n| n.to_string_lossy().to_string())
         .unwrap_or_else(|| path.to_string_lossy().to_string());
 
     if metadata.is_file() {
-        let extension = path.extension()
+        let extension = path
+            .extension()
             .map(|e| format!(".{}", e.to_string_lossy().to_lowercase()));
 
         return Ok(FolderNode {
@@ -44,43 +52,39 @@ fn scan_directory_recursive(path: &Path, max_depth: usize, current_depth: usize)
     let mut children = Vec::new();
     let mut file_count = 0u32;
 
+    // Directories we can't read are skipped silently
     if current_depth < max_depth {
-        match fs::read_dir(path) {
-            Ok(entries) => {
-                for entry in entries.flatten() {
-                    let entry_path = entry.path();
+        if let Ok(entries) = fs::read_dir(path) {
+            for entry in entries.flatten() {
+                let entry_path = entry.path();
 
-                    // Skip hidden files/folders on Unix-like systems
-                    if let Some(name) = entry_path.file_name() {
-                        if name.to_string_lossy().starts_with('.') {
-                            continue;
-                        }
-                    }
-
-                    match scan_directory_recursive(&entry_path, max_depth, current_depth + 1) {
-                        Ok(node) => {
-                            if node.node_type == "file" {
-                                file_count += 1;
-                            } else if let Some(count) = node.file_count {
-                                file_count += count;
-                            }
-                            children.push(node);
-                        }
-                        Err(_) => continue, // Skip entries we can't read
+                // Skip hidden files/folders on Unix-like systems
+                if let Some(name) = entry_path.file_name() {
+                    if name.to_string_lossy().starts_with('.') {
+                        continue;
                     }
                 }
+
+                match scan_directory_recursive(&entry_path, max_depth, current_depth + 1) {
+                    Ok(node) => {
+                        if node.node_type == "file" {
+                            file_count += 1;
+                        } else if let Some(count) = node.file_count {
+                            file_count += count;
+                        }
+                        children.push(node);
+                    }
+                    Err(_) => continue, // Skip entries we can't read
+                }
             }
-            Err(_) => {} // Skip directories we can't read
         }
     }
 
     // Sort children: folders first, then files, alphabetically
-    children.sort_by(|a, b| {
-        match (&a.node_type[..], &b.node_type[..]) {
-            ("folder", "file") => std::cmp::Ordering::Less,
-            ("file", "folder") => std::cmp::Ordering::Greater,
-            _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
-        }
+    children.sort_by(|a, b| match (&a.node_type[..], &b.node_type[..]) {
+        ("folder", "file") => std::cmp::Ordering::Less,
+        ("file", "folder") => std::cmp::Ordering::Greater,
+        _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
     });
 
     Ok(FolderNode {
@@ -150,8 +154,8 @@ pub async fn load_annotations() -> Result<Vec<FolderAnnotation>, String> {
     let json = fs::read_to_string(&annotations_path)
         .map_err(|e| format!("Failed to read annotations: {}", e))?;
 
-    let annotations: Vec<FolderAnnotation> = serde_json::from_str(&json)
-        .map_err(|e| format!("Failed to parse annotations: {}", e))?;
+    let annotations: Vec<FolderAnnotation> =
+        serde_json::from_str(&json).map_err(|e| format!("Failed to parse annotations: {}", e))?;
 
     Ok(annotations)
 }
@@ -211,8 +215,7 @@ pub async fn export_structure_for_ai(path: String) -> Result<AIExportData, Strin
     let user_profile: UserProfile = if profile_path.exists() {
         let json = fs::read_to_string(&profile_path)
             .map_err(|e| format!("Failed to read profile: {}", e))?;
-        serde_json::from_str(&json)
-            .map_err(|e| format!("Failed to parse profile: {}", e))?
+        serde_json::from_str(&json).map_err(|e| format!("Failed to parse profile: {}", e))?
     } else {
         UserProfile {
             language: "en".to_string(),
