@@ -17,7 +17,9 @@ use std::sync::mpsc;
 use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
-const N_CTX: u32 = 8192;
+/// Context/batch size ladder: tried in order until one fits in memory
+/// (large compute buffers make context creation fail on low-VRAM GPUs).
+const CTX_LADDER: [(u32, u32); 3] = [(8192, 2048), (4096, 1024), (2048, 512)];
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(600);
 
 /// Generic JSON grammar (GBNF): the model physically cannot emit anything
@@ -164,18 +166,44 @@ fn run_one(backend: &LlamaBackend, model: &LlamaModel, job: &Job) -> Result<Stri
         job.system, job.prompt
     );
 
-    let ctx_params = LlamaContextParams::default()
-        .with_n_ctx(NonZeroU32::new(N_CTX))
-        .with_n_batch(N_CTX);
-    let mut ctx = model
-        .new_context(backend, ctx_params)
-        .map_err(|e| format!("context creation failed: {}", e))?;
+    // Walk the size ladder: big contexts fail on machines with little
+    // free (V)RAM, smaller ones still handle our prompts.
+    let mut ctx = None;
+    let mut n_ctx = 0u32;
+    let mut n_batch = 0u32;
+    let mut last_err = String::new();
+    for (ctx_size, batch_size) in CTX_LADDER {
+        let params = LlamaContextParams::default()
+            .with_n_ctx(NonZeroU32::new(ctx_size))
+            .with_n_batch(batch_size);
+        match model.new_context(backend, params) {
+            Ok(created) => {
+                ctx = Some(created);
+                n_ctx = ctx_size;
+                n_batch = batch_size;
+                break;
+            }
+            Err(e) => {
+                last_err = e.to_string();
+                eprintln!(
+                    "context creation failed at n_ctx={} ({}), trying smaller",
+                    ctx_size, e
+                );
+            }
+        }
+    }
+    let Some(mut ctx) = ctx else {
+        return Err(format!(
+            "context creation failed even at the smallest size: {} (not enough free memory?)",
+            last_err
+        ));
+    };
 
     let tokens = model
         .str_to_token(&full_prompt, AddBos::Always)
         .map_err(|e| format!("tokenization failed: {}", e))?;
 
-    let max_prompt = (N_CTX - job.max_tokens.min(N_CTX / 2)) as usize;
+    let max_prompt = (n_ctx - job.max_tokens.min(n_ctx / 2)) as usize;
     if tokens.len() > max_prompt {
         return Err(format!(
             "prompt too long for the local model ({} tokens, max {})",
@@ -184,15 +212,22 @@ fn run_one(backend: &LlamaBackend, model: &LlamaModel, job: &Job) -> Result<Stri
         ));
     }
 
-    let mut batch = LlamaBatch::new(N_CTX as usize, 1);
-    let last_index = tokens.len() as i32 - 1;
-    for (i, token) in tokens.iter().enumerate() {
-        batch
-            .add(*token, i as i32, &[0], i as i32 == last_index)
-            .map_err(|e| format!("batch add failed: {}", e))?;
+    // Decode the prompt in n_batch-sized chunks (decode rejects larger batches)
+    let mut batch = LlamaBatch::new(n_batch as usize, 1);
+    let total = tokens.len();
+    let mut pos = 0usize;
+    for chunk in tokens.chunks(n_batch as usize) {
+        batch.clear();
+        for (j, token) in chunk.iter().enumerate() {
+            let is_last_overall = pos + j == total - 1;
+            batch
+                .add(*token, (pos + j) as i32, &[0], is_last_overall)
+                .map_err(|e| format!("batch add failed: {}", e))?;
+        }
+        ctx.decode(&mut batch)
+            .map_err(|e| format!("prompt decode failed: {}", e))?;
+        pos += chunk.len();
     }
-    ctx.decode(&mut batch)
-        .map_err(|e| format!("prompt decode failed: {}", e))?;
 
     let grammar = LlamaSampler::grammar(model, JSON_GRAMMAR, "root")
         .map_err(|e| format!("grammar compile failed: {}", e))?;
@@ -200,7 +235,8 @@ fn run_one(backend: &LlamaBackend, model: &LlamaModel, job: &Job) -> Result<Stri
 
     let mut output = String::new();
     let mut decoder = encoding_rs::UTF_8.new_decoder();
-    let mut n_cur = batch.n_tokens();
+    // Next absolute position = prompt length (batch holds only the last chunk)
+    let mut n_cur = total as i32;
 
     for _ in 0..job.max_tokens {
         let token = sampler.sample(&ctx, batch.n_tokens() - 1);
