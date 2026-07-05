@@ -335,6 +335,7 @@
       "conflict": "conflict",
       "failed": "eșuat",
       "planned": "planificat"
-    }
+    },
+    "createdFolders": "Foldere create"
   }
 }

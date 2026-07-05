@@ -335,6 +335,7 @@
       "conflict": "conflit",
       "failed": "échoué",
       "planned": "planifié"
-    }
+    },
+    "createdFolders": "Dossiers créés"
   }
 }

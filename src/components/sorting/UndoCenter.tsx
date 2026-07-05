@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useSortStore } from "@/stores/sortStore";
 import type { JournalEntry } from "@/lib/tauri";
-import { ChevronDown, ChevronRight, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronRight, FolderPlus, MoveRight, RotateCcw } from "lucide-react";
 
 interface UndoCenterProps {
   open: boolean;
@@ -155,6 +155,11 @@ interface BatchEntriesProps {
   onUndoFile: (journalId: number) => void;
 }
 
+function nameOf(path: string): string {
+  const idx = Math.max(path.lastIndexOf("\\"), path.lastIndexOf("/"));
+  return idx >= 0 ? path.slice(idx + 1) : path;
+}
+
 function BatchEntries({ entries, onUndoFolder, onUndoFile }: BatchEntriesProps) {
   const { t } = useTranslation();
 
@@ -169,6 +174,11 @@ function BatchEntries({ entries, onUndoFolder, onUndoFile }: BatchEntriesProps) 
     }
     return [...groups.entries()];
   }, [entries]);
+
+  const createdFolders = useMemo(
+    () => entries.filter((e) => e.kind === "mkdir"),
+    [entries]
+  );
 
   const statusVariant = (status: string) => {
     switch (status) {
@@ -203,9 +213,18 @@ function BatchEntries({ entries, onUndoFolder, onUndoFile }: BatchEntriesProps) 
                 <div
                   key={entry.id}
                   className="flex items-center gap-2 rounded bg-background px-2 py-1"
+                  title={`${entry.src} → ${entry.dst}`}
                 >
-                  <span className="text-sm text-foreground truncate flex-1">
+                  <span className="text-sm text-foreground truncate">
                     {entry.src.slice(folder.length + 1)}
+                  </span>
+                  <MoveRight className="w-3 h-3 text-muted-foreground shrink-0" />
+                  <span className="text-sm text-primary truncate flex-1">
+                    {nameOf(parentOf(entry.dst))}
+                    <span className="text-muted-foreground">
+                      {"\\"}
+                      {nameOf(entry.dst)}
+                    </span>
                   </span>
                   <Badge variant={statusVariant(entry.status)}>
                     {t(`sorting.status.${entry.status}`, entry.status)}
@@ -225,6 +244,31 @@ function BatchEntries({ entries, onUndoFolder, onUndoFile }: BatchEntriesProps) 
             </div>
           </div>
         ))}
+
+        {createdFolders.length > 0 && (
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">
+              {t("sorting.createdFolders")}
+            </p>
+            <div className="space-y-1">
+              {createdFolders.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="flex items-center gap-2 rounded bg-background px-2 py-1"
+                  title={entry.dst}
+                >
+                  <FolderPlus className="w-3 h-3 text-primary shrink-0" />
+                  <span className="text-sm font-mono text-foreground truncate flex-1">
+                    {entry.dst}
+                  </span>
+                  <Badge variant={statusVariant(entry.status)}>
+                    {t(`sorting.status.${entry.status}`, entry.status)}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

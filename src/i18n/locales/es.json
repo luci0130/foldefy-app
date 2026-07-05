@@ -335,6 +335,7 @@
       "conflict": "conflicto",
       "failed": "fallido",
       "planned": "planificado"
-    }
+    },
+    "createdFolders": "Carpetas creadas"
   }
 }

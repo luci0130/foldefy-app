@@ -220,6 +220,8 @@ export const useSortStore = create<SortState>()(
           result: null,
           undoResult: null,
           error: null,
+          // Folder contents changed after sorting — re-detect hotspots
+          hotspotsLoaded: false,
         }),
     }),
     {

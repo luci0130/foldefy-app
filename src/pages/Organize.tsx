@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +25,15 @@ export function Organize() {
     resetRun,
   } = useSortStore();
   const [historyOpen, setHistoryOpen] = useState(false);
+
+  // Returning to the page after a finished run starts fresh — the previous
+  // run stays available in the sorting history.
+  useEffect(() => {
+    if (phase === "done") {
+      resetRun();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const startDisabled =
     scopeType === "selected_folders" && selectedFolders.length === 0;
