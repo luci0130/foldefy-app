@@ -1,5 +1,9 @@
 mod commands;
+mod db;
+mod error;
 mod models;
+
+use tauri::Manager;
 
 use commands::{
     apply_template, cancel_scan, export_structure_for_ai, fetch_community_templates,
@@ -13,6 +17,12 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .setup(|app| {
+            let data_dir = app.path().app_data_dir()?;
+            let pool = db::init(&data_dir)?;
+            app.manage(pool);
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             save_user_profile,
             load_user_profile,
