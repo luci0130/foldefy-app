@@ -1,5 +1,6 @@
 pub mod ai;
 pub mod folder;
+pub mod models;
 pub mod scanning;
 pub mod sorting;
 pub mod structure;
@@ -8,6 +9,7 @@ pub mod user;
 
 pub use ai::*;
 pub use folder::*;
+pub use models::*;
 pub use scanning::*;
 pub use sorting::*;
 pub use structure::*;

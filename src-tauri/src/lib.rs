@@ -7,12 +7,13 @@ mod models;
 use tauri::Manager;
 
 use commands::{
-    apply_structure, apply_template, cancel_scan, execute_plan, export_structure_for_ai,
-    fetch_community_templates, generate_ai_recommendation, get_batch, get_hotspots, list_batches,
-    list_drives, load_ai_config, load_annotations, load_builtin_templates, load_folder_index,
-    load_user_profile, plan_sort, save_ai_config, save_annotation, save_folder_index,
-    save_user_profile, scan_all_drives, scan_directory, smart_scan_directory, undo_batch,
-    undo_file, undo_folder,
+    apply_structure, apply_template, cancel_model_download, cancel_scan, delete_model,
+    download_model, execute_plan, export_structure_for_ai, fetch_community_templates,
+    generate_ai_recommendation, get_batch, get_hardware_profile, get_hotspots, list_batches,
+    list_drives, list_models, load_ai_config, load_annotations, load_builtin_templates,
+    load_folder_index, load_user_profile, local_engine_available, plan_sort, save_ai_config,
+    save_annotation, save_folder_index, save_user_profile, scan_all_drives, scan_directory,
+    smart_scan_directory, undo_batch, undo_file, undo_folder,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -60,6 +61,12 @@ pub fn run() {
             undo_file,
             list_batches,
             get_batch,
+            get_hardware_profile,
+            list_models,
+            download_model,
+            cancel_model_download,
+            delete_model,
+            local_engine_available,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

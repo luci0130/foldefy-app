@@ -1,5 +1,6 @@
 pub mod ai;
 pub mod folder;
+pub mod hardware;
 pub mod scanning;
 pub mod sorting;
 pub mod template;
