@@ -14,7 +14,11 @@ pub fn init(app_data_dir: &Path) -> Result<DbPool, FoldefyError> {
 
     let manager =
         SqliteConnectionManager::file(app_data_dir.join("foldefy.db")).with_init(|conn| {
-            conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;")?;
+            // synchronous=FULL: move-journal writes must hit disk before the
+            // filesystem move happens (crash-safety invariant of the sorter)
+            conn.execute_batch(
+                "PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL;",
+            )?;
             Ok(())
         });
 

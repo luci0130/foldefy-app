@@ -1,6 +1,7 @@
 pub mod ai;
 pub mod folder;
 pub mod scanning;
+pub mod sorting;
 pub mod template;
 pub mod user;
 

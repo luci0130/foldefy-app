@@ -154,6 +154,115 @@ export async function getHotspots(): Promise<Hotspot[]> {
   return invoke("get_hotspots");
 }
 
+// Sorting types
+export type SortScope =
+  | { type: "selected_folders"; folders: string[] }
+  | { type: "hotspots" }
+  | { type: "everything" };
+
+export type SortMode = "auto" | "review" | "per_batch";
+
+export interface PlannedMove {
+  journal_id: number;
+  src: string;
+  dst: string;
+  file_name: string;
+  category: string;
+  confidence: number;
+  reason: string;
+}
+
+export interface NeedsReviewFile {
+  path: string;
+  file_name: string;
+  reason: string;
+}
+
+export interface MovePlan {
+  batch_id: number;
+  entries: PlannedMove[];
+  needs_review: NeedsReviewFile[];
+  skipped_protected: string[];
+}
+
+export interface ExecuteResult {
+  batch_id: number;
+  moved: number;
+  failed: string[];
+}
+
+export interface UndoResult {
+  undone: number;
+  conflicts: string[];
+  failed: string[];
+}
+
+export interface SortBatch {
+  id: number;
+  created_at: string;
+  mode: string;
+  status: string;
+  total: number;
+  done: number;
+  undone: number;
+  failed: number;
+}
+
+export interface JournalEntry {
+  id: number;
+  batch_id: number;
+  kind: string;
+  src: string;
+  dst: string;
+  status: string;
+  error?: string;
+}
+
+export interface BatchDetail {
+  batch: SortBatch;
+  entries: JournalEntry[];
+}
+
+/** Payload of the "sort-progress" event. */
+export interface SortProgressEvent {
+  batch_id: number;
+  done: number;
+  total: number;
+  current: string;
+}
+
+// Sorting commands
+export async function planSort(scope: SortScope, mode?: SortMode): Promise<MovePlan> {
+  return invoke("plan_sort", { scope, mode: mode ?? null });
+}
+
+export async function executePlan(
+  batchId: number,
+  entryIds?: number[]
+): Promise<ExecuteResult> {
+  return invoke("execute_plan", { batchId, entryIds: entryIds ?? null });
+}
+
+export async function undoBatch(batchId: number): Promise<UndoResult> {
+  return invoke("undo_batch", { batchId });
+}
+
+export async function undoFolder(batchId: number, folder: string): Promise<UndoResult> {
+  return invoke("undo_folder", { batchId, folder });
+}
+
+export async function undoFile(journalId: number): Promise<UndoResult> {
+  return invoke("undo_file", { journalId });
+}
+
+export async function listBatches(): Promise<SortBatch[]> {
+  return invoke("list_batches");
+}
+
+export async function getBatch(batchId: number): Promise<BatchDetail> {
+  return invoke("get_batch", { batchId });
+}
+
 // AI types
 export interface AIConfig {
   api_key: string | null;
