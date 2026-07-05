@@ -1,136 +1,140 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FolderOpen, Loader2, AlertCircle } from "lucide-react";
-import { useFolderStore } from "@/stores/folderStore";
-import { selectFolder, scanDirectory } from "@/lib/tauri";
-import { FolderTree } from "@/components/folder-tree/FolderTree";
-import { FolderStats } from "@/components/folder-tree/FolderStats";
+import { Card, CardContent } from "@/components/ui/card";
+import { AlertCircle, CheckCircle2, History, RotateCcw, Sparkles } from "lucide-react";
+import { useSortStore } from "@/stores/sortStore";
+import { ScopePicker } from "@/components/sorting/ScopePicker";
+import { ReviewPlan } from "@/components/sorting/ReviewPlan";
+import { SortProgress } from "@/components/sorting/SortProgress";
+import { UndoCenter } from "@/components/sorting/UndoCenter";
 
-export function Organize() { 
+export function Organize() {
+  const { t } = useTranslation();
   const {
-    selectedPath,
-    folderTree,
-    isScanning,
+    phase,
+    scopeType,
+    selectedFolders,
+    reviewFirst,
+    setReviewFirst,
+    start,
+    result,
     error,
-    setSelectedPath,
-    setFolderTree,
-    setScanning,
-    setError,
-  } = useFolderStore();
-  const [localError, setLocalError] = useState<string | null>(null);
+    undoResult,
+    runUndoBatch,
+    resetRun,
+  } = useSortStore();
+  const [historyOpen, setHistoryOpen] = useState(false);
 
-  const handleSelectFolder = async () => {
-    try {
-      setLocalError(null);
-      const path = await selectFolder();
-      if (path) {
-        setSelectedPath(path);
-        setScanning(true);
-        setError(null);
-
-        try {
-          const tree = await scanDirectory(path);
-          setFolderTree(tree);
-        } catch (e) {
-          const errorMessage = e instanceof Error ? e.message : "Failed to scan directory";
-          setError(errorMessage);
-          setLocalError(errorMessage);
-        } finally {
-          setScanning(false);
-        }
-      }
-    } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : "Failed to select folder";
-      setLocalError(errorMessage);
-    }
-  };
+  const startDisabled =
+    scopeType === "selected_folders" && selectedFolders.length === 0;
 
   return (
-    <div className="space-y-4 h-full flex flex-col">
+    <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-foreground">Organize</h1>
-          <p className="text-muted-foreground">
-            Select a folder to analyze and organize its structure
-          </p>
+          <h1 className="text-2xl font-bold text-foreground">{t("sorting.title")}</h1>
+          <p className="text-muted-foreground">{t("sorting.subtitle")}</p>
         </div>
-        <Button onClick={handleSelectFolder} disabled={isScanning}>
-          {isScanning ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Scanning...
-            </>
-          ) : (
-            <>
-              <FolderOpen className="w-4 h-4 mr-2" />
-              Select Folder
-            </>
-          )}
+        <Button variant="outline" onClick={() => setHistoryOpen(true)}>
+          <History className="w-4 h-4 mr-2" />
+          {t("sorting.history")}
         </Button>
       </div>
 
-      {/* Error display */}
-      {(error || localError) && (
+      {error && (
         <Card className="bg-destructive/10 border-destructive/50">
           <CardContent className="flex items-center gap-3 py-3">
             <AlertCircle className="w-5 h-5 text-destructive" />
-            <p className="text-sm text-destructive">{error || localError}</p>
+            <p className="text-sm text-destructive">{error}</p>
           </CardContent>
         </Card>
       )}
 
-      {/* Selected path display */}
-      {selectedPath && (
-        <Card className="bg-surface border-border">
-          <CardContent className="py-3">
-            <p className="text-sm">
-              <span className="text-muted-foreground">Selected: </span>
-              <span className="text-foreground font-mono">{selectedPath}</span>
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {phase === "setup" && (
+        <>
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold text-foreground">
+              {t("sorting.scopeTitle")}
+            </h2>
+            <ScopePicker />
+          </div>
 
-      {/* Statistics */}
-      {folderTree && <FolderStats tree={folderTree} />}
-
-      {/* Folder tree or empty state */}
-      <div className="flex-1 min-h-0">
-        {folderTree ? (
-          <Card className="bg-surface border-border h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Folder Structure</CardTitle>
-              <CardDescription>
-                Click on folders to expand them. Right-click or click the edit icon to add annotations.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-[calc(100%-80px)] overflow-auto">
-              <FolderTree node={folderTree} level={0} />
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="bg-surface border-border h-full flex items-center justify-center">
-            <CardContent className="flex flex-col items-center justify-center text-center py-16">
-              <div className="w-20 h-20 rounded-full bg-surface-hover flex items-center justify-center mb-6">
-                <FolderOpen className="w-10 h-10 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                No folder selected
-              </h3>
-              <p className="text-muted-foreground max-w-md mb-6">
-                Select a folder to visualize its structure and add context for AI
-                analysis.
-              </p>
-              <Button onClick={handleSelectFolder}>
-                <FolderOpen className="w-4 h-4 mr-2" />
-                Select Folder
+          <Card className="bg-surface border-border">
+            <CardContent className="p-4 flex items-center justify-between gap-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={reviewFirst}
+                  onChange={(e) => setReviewFirst(e.target.checked)}
+                  className="accent-primary"
+                />
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {t("sorting.reviewFirst")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("sorting.reviewFirstDesc")}
+                  </p>
+                </div>
+              </label>
+              <Button size="lg" onClick={() => void start()} disabled={startDisabled}>
+                <Sparkles className="w-4 h-4 mr-2" />
+                {t("sorting.start")}
               </Button>
             </CardContent>
           </Card>
-        )}
-      </div>
+        </>
+      )}
+
+      {(phase === "planning" || phase === "executing") && <SortProgress />}
+
+      {phase === "review" && <ReviewPlan />}
+
+      {phase === "done" && (
+        <Card className="bg-surface border-border">
+          <CardContent className="py-10 flex flex-col items-center gap-4 text-center">
+            <CheckCircle2 className="w-10 h-10 text-success" />
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                {result && result.moved > 0
+                  ? t("sorting.doneTitle")
+                  : t("sorting.nothingToSort")}
+              </h2>
+              {result && result.moved > 0 && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t("sorting.doneSummary", { count: result.moved })}
+                </p>
+              )}
+              {result && result.failed.length > 0 && (
+                <p className="text-sm text-warning mt-1">
+                  {t("sorting.failedSummary", { count: result.failed.length })}
+                </p>
+              )}
+              {undoResult && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t("sorting.undoDone", { count: undoResult.undone })}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-3">
+              {result && result.moved > 0 && !undoResult && (
+                <Button
+                  variant="outline"
+                  onClick={() => void runUndoBatch(result.batch_id)}
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  {t("sorting.undoAll")}
+                </Button>
+              )}
+              <Button onClick={resetRun}>{t("sorting.sortMore")}</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <UndoCenter open={historyOpen} onOpenChange={setHistoryOpen} />
     </div>
   );
 }
