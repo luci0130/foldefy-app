@@ -213,7 +213,30 @@
     "willCreate": "{{count}} Ordner werden erstellt",
     "alreadyExist": "{{count}} existieren bereits",
     "applied": "{{count}} Ordner erstellt — jederzeit über den Sortierverlauf rückgängig machbar",
-    "applyConfirm": "{{count}} Ordner erstellen"
+    "applyConfirm": "{{count}} Ordner erstellen",
+    "settingsTitle": "KI",
+    "settingsDesc": "Lokale KI-Modelle und Cloud-Alternative",
+    "hardwareSummary": "{{ram}} GB RAM · {{cores}} CPU-Kerne",
+    "recommendedTier": "Empfohlene Modellgröße:",
+    "tier": {
+      "below_min": "Nur Cloud (unter 8 GB RAM)",
+      "tier1": "Kompakt (1,7B)",
+      "tier2": "Ausgewogen (4B)",
+      "tier3": "Qualität (8B)"
+    },
+    "providerLocal": "Offline (lokales Modell)",
+    "providerLocalDesc": "Läuft vollständig auf diesem Gerät — nichts verlässt den Computer",
+    "providerLocalSoon": "Kommt im nächsten Update — bis dahin wird Claude verwendet",
+    "providerClaude": "Cloud (Claude API)",
+    "providerClaudeDesc": "Höhere Qualität, benötigt API-Schlüssel und Internet",
+    "models": "Lokale Modelle",
+    "recommended": "Empfohlen",
+    "download": "Herunterladen",
+    "resume": "Fortsetzen",
+    "downloadingPct": "Wird heruntergeladen… {{pct}} %",
+    "verifying": "Integrität wird geprüft…",
+    "ready": "Heruntergeladen",
+    "sizeGb": "{{size}} GB"
   },
   "templates": {
     "title": "Vorlagen-Marktplatz",

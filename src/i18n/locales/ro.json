@@ -213,7 +213,30 @@
     "willCreate": "{{count}} foldere vor fi create",
     "alreadyExist": "{{count}} există deja",
     "applied": "{{count}} foldere create — poți anula oricând din Istoric sortări",
-    "applyConfirm": "Creează {{count}} foldere"
+    "applyConfirm": "Creează {{count}} foldere",
+    "settingsTitle": "AI",
+    "settingsDesc": "Modele AI locale și varianta cloud",
+    "hardwareSummary": "{{ram}} GB RAM · {{cores}} nuclee CPU",
+    "recommendedTier": "Dimensiune de model recomandată:",
+    "tier": {
+      "below_min": "Doar cloud (sub 8 GB RAM)",
+      "tier1": "Compact (1.7B)",
+      "tier2": "Echilibrat (4B)",
+      "tier3": "Calitate (8B)"
+    },
+    "providerLocal": "Offline (model local)",
+    "providerLocalDesc": "Rulează integral pe acest dispozitiv — nimic nu pleacă de pe calculator",
+    "providerLocalSoon": "Vine în următorul update — între timp se folosește Claude",
+    "providerClaude": "Cloud (Claude API)",
+    "providerClaudeDesc": "Calitate mai mare, necesită cheie API și internet",
+    "models": "Modele locale",
+    "recommended": "Recomandat",
+    "download": "Descarcă",
+    "resume": "Reia",
+    "downloadingPct": "Se descarcă… {{pct}}%",
+    "verifying": "Se verifică integritatea…",
+    "ready": "Descărcat",
+    "sizeGb": "{{size}} GB"
   },
   "templates": {
     "title": "Piata de Sabloane",

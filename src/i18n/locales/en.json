@@ -213,7 +213,30 @@
     "willCreate": "{{count}} folders will be created",
     "alreadyExist": "{{count}} already exist",
     "applied": "{{count}} folders created — undo anytime from Sorting history",
-    "applyConfirm": "Create {{count}} folders"
+    "applyConfirm": "Create {{count}} folders",
+    "settingsTitle": "AI",
+    "settingsDesc": "Local AI models and cloud fallback",
+    "hardwareSummary": "{{ram}} GB RAM · {{cores}} CPU cores",
+    "recommendedTier": "Recommended model size:",
+    "tier": {
+      "below_min": "Cloud only (under 8 GB RAM)",
+      "tier1": "Compact (1.7B)",
+      "tier2": "Balanced (4B)",
+      "tier3": "Quality (8B)"
+    },
+    "providerLocal": "Offline (local model)",
+    "providerLocalDesc": "Runs entirely on this device — nothing leaves your computer",
+    "providerLocalSoon": "Coming in the next update — Claude is used meanwhile",
+    "providerClaude": "Cloud (Claude API)",
+    "providerClaudeDesc": "Higher quality, requires an API key and internet",
+    "models": "Local models",
+    "recommended": "Recommended",
+    "download": "Download",
+    "resume": "Resume",
+    "downloadingPct": "Downloading… {{pct}}%",
+    "verifying": "Verifying integrity…",
+    "ready": "Downloaded",
+    "sizeGb": "{{size}} GB"
   },
   "templates": {
     "title": "Template Marketplace",

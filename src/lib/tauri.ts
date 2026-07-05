@@ -281,6 +281,74 @@ export async function applyStructure(
 // AI types
 export interface AIConfig {
   api_key: string | null;
+  provider?: "local" | "claude" | null;
+  local_model_id?: string | null;
+}
+
+// Hardware / local model types
+export type ModelTier = "below_min" | "tier1" | "tier2" | "tier3";
+
+export interface GpuInfo {
+  name: string;
+  vendor_id: number;
+  dedicated_vram_mb: number;
+  is_software: boolean;
+}
+
+export interface HardwareProfile {
+  total_ram_mb: number;
+  cpu_cores: number;
+  gpus: GpuInfo[];
+  vulkan_available: boolean;
+  tier: ModelTier;
+}
+
+export interface ModelInfo {
+  id: string;
+  purpose: string;
+  tier: ModelTier;
+  display_name: string;
+  repo: string;
+  filename: string;
+  url: string;
+  size_bytes: number;
+  sha256: string | null;
+  min_ram_mb: number;
+  status: "ready" | "partial" | "not_downloaded";
+  downloaded_bytes: number;
+  local_path: string | null;
+}
+
+/** Payload of the "model-download-progress" event. */
+export interface ModelDownloadProgress {
+  id: string;
+  downloaded: number;
+  total: number;
+  state: "downloading" | "verifying" | "ready" | "cancelled" | "error";
+}
+
+export async function getHardwareProfile(): Promise<HardwareProfile> {
+  return invoke("get_hardware_profile");
+}
+
+export async function listModels(): Promise<ModelInfo[]> {
+  return invoke("list_models");
+}
+
+export async function downloadModel(id: string): Promise<void> {
+  return invoke("download_model", { id });
+}
+
+export async function cancelModelDownload(id: string): Promise<void> {
+  return invoke("cancel_model_download", { id });
+}
+
+export async function deleteModel(id: string): Promise<void> {
+  return invoke("delete_model", { id });
+}
+
+export async function localEngineAvailable(): Promise<boolean> {
+  return invoke("local_engine_available");
 }
 
 export interface RecommendedFolder {

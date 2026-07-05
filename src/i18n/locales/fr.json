@@ -213,7 +213,30 @@
     "willCreate": "{{count}} dossiers seront créés",
     "alreadyExist": "{{count}} existent déjà",
     "applied": "{{count}} dossiers créés — annulable à tout moment depuis l'historique",
-    "applyConfirm": "Créer {{count}} dossiers"
+    "applyConfirm": "Créer {{count}} dossiers",
+    "settingsTitle": "IA",
+    "settingsDesc": "Modèles IA locaux et alternative cloud",
+    "hardwareSummary": "{{ram}} Go de RAM · {{cores}} cœurs CPU",
+    "recommendedTier": "Taille de modèle recommandée :",
+    "tier": {
+      "below_min": "Cloud uniquement (moins de 8 Go de RAM)",
+      "tier1": "Compact (1,7B)",
+      "tier2": "Équilibré (4B)",
+      "tier3": "Qualité (8B)"
+    },
+    "providerLocal": "Hors ligne (modèle local)",
+    "providerLocalDesc": "Fonctionne entièrement sur cet appareil — rien ne quitte votre ordinateur",
+    "providerLocalSoon": "Arrive dans la prochaine mise à jour — Claude est utilisé en attendant",
+    "providerClaude": "Cloud (API Claude)",
+    "providerClaudeDesc": "Qualité supérieure, nécessite une clé API et Internet",
+    "models": "Modèles locaux",
+    "recommended": "Recommandé",
+    "download": "Télécharger",
+    "resume": "Reprendre",
+    "downloadingPct": "Téléchargement… {{pct}} %",
+    "verifying": "Vérification de l'intégrité…",
+    "ready": "Téléchargé",
+    "sizeGb": "{{size}} Go"
   },
   "templates": {
     "title": "Marche de Modeles",

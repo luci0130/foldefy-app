@@ -213,7 +213,30 @@
     "willCreate": "Se crearán {{count}} carpetas",
     "alreadyExist": "{{count}} ya existen",
     "applied": "{{count}} carpetas creadas — se puede deshacer desde el historial",
-    "applyConfirm": "Crear {{count}} carpetas"
+    "applyConfirm": "Crear {{count}} carpetas",
+    "settingsTitle": "IA",
+    "settingsDesc": "Modelos de IA locales y alternativa en la nube",
+    "hardwareSummary": "{{ram}} GB de RAM · {{cores}} núcleos de CPU",
+    "recommendedTier": "Tamaño de modelo recomendado:",
+    "tier": {
+      "below_min": "Solo nube (menos de 8 GB de RAM)",
+      "tier1": "Compacto (1,7B)",
+      "tier2": "Equilibrado (4B)",
+      "tier3": "Calidad (8B)"
+    },
+    "providerLocal": "Sin conexión (modelo local)",
+    "providerLocalDesc": "Funciona íntegramente en este dispositivo — nada sale de tu ordenador",
+    "providerLocalSoon": "Llega en la próxima actualización — mientras tanto se usa Claude",
+    "providerClaude": "Nube (API de Claude)",
+    "providerClaudeDesc": "Mayor calidad, requiere clave API e Internet",
+    "models": "Modelos locales",
+    "recommended": "Recomendado",
+    "download": "Descargar",
+    "resume": "Reanudar",
+    "downloadingPct": "Descargando… {{pct}} %",
+    "verifying": "Verificando integridad…",
+    "ready": "Descargado",
+    "sizeGb": "{{size}} GB"
   },
   "templates": {
     "title": "Mercado de Plantillas",

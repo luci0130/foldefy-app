@@ -11,6 +11,7 @@ import {
   ProfileEditDialog,
   type EditableField,
 } from "@/components/settings/ProfileEditDialog";
+import { AISettings } from "@/components/settings/AISettings";
 
 const languages: Record<string, string> = {
   en: "English",
@@ -220,6 +221,9 @@ export function Settings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* AI section */}
+      <AISettings />
 
       {/* Appearance section */}
       <Card className="bg-surface border-border">
