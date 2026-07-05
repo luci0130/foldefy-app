@@ -46,8 +46,10 @@ jobs:
       - name: Format check
         run: cargo fmt --check
 
+      # CPU-only build: runners have CMake preinstalled but no Vulkan SDK.
+      # Local/release builds use the default "vulkan" feature.
       - name: Clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --no-default-features -- -D warnings
 
       - name: Tests
-        run: cargo test
+        run: cargo test --no-default-features

@@ -7,6 +7,12 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+# Vulkan GPU acceleration for the local AI engine. CI builds CPU-only
+# (no Vulkan SDK on runners); release/dev builds keep it on.
+default = ["vulkan"]
+vulkan = ["llama-cpp-2/vulkan"]
+
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
@@ -38,6 +44,8 @@ ash = "0.38"
 sha2 = "0.10"
 futures-util = "0.3"
 async-trait = "0.1"
+llama-cpp-2 = "0.1"
+encoding_rs = "0.8"
 
 [dev-dependencies]
 tempfile = "3"

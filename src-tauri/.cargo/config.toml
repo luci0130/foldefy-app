@@ -1,0 +1,26 @@
+# Windows build configuration for the embedded llama.cpp engine.
+#
+# target-dir: llama.cpp's Vulkan shader sub-build nests directories so deep
+# that MSVC's 260-char MAX_PATH limit is exceeded under the default
+# src-tauri/target location (cl.exe ignores the LongPathsEnabled policy).
+# A short build root keeps every path under the limit.
+#
+# CMAKE_GENERATOR=Ninja: the Visual Studio generator races the
+# vulkan-shaders-gen ExternalProject steps under --parallel (build starts
+# before configure finishes); Ninja orders them correctly and is faster.
+#
+# LIBCLANG_PATH: bindgen needs libclang to generate the llama.cpp bindings.
+
+[build]
+target-dir = "C:/fbuild"
+
+[env]
+CMAKE_GENERATOR = "Ninja"
+CMAKE_MAKE_PROGRAM = "C:\\Users\\lucian.turiac\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe\\ninja.exe"
+LIBCLANG_PATH = "C:\\Program Files\\LLVM\\bin"
+VULKAN_SDK = "C:\\VulkanSDK\\1.4.350.0"
+# NOTE: llama.cpp's vulkan-shaders-gen sub-project runs its own isolated
+# CMake configure and needs cl.exe + INCLUDE/LIB from the MSVC environment.
+# Build with the vulkan feature inside a VS Developer shell — use the
+# pnpm scripts (tauri:dev / tauri:build), which wrap scripts/with-msvc.ps1.
+# Do NOT set CC/CXX here: that breaks cc-rs-based crates (sqlite, ring).
