@@ -1,6 +1,6 @@
 # Foldefy — Comprehensive Module Development Plan (Offline-First Local AI)
 
-> Status: draft v1 — to be refined with Ultraplan on Claude Code web.
+> Status: v2 refined — validated against codebase; Phases 0–1 expanded into implementation tasks.
 > Date: 2026-07-05
 
 ## Context
@@ -125,10 +125,46 @@ GitHub Actions (windows-latest): CMake + Vulkan SDK setup, `cargo fmt/clippy/tes
 5. **File-move safety** → journal-before-move, startup reconciliation, copy-verify-delete, OneDrive guard, protected paths, full undo, heavy executor integration tests.
 6. **ocrs maturity** → Phase 4, additive; benchmark vs tesseract-rs first; classification tolerates imperfect OCR.
 
+## Phase 0 — concrete implementation tasks (start here)
+
+**0.1 CI skeleton** — `.github/workflows/ci.yml` (windows-latest): pnpm install → `tsc --noEmit` → `cargo fmt --check`, `cargo clippy -- -D warnings`, `cargo test` in `src-tauri`; cache `~/.cargo` + `target`. No Vulkan SDK yet (Phase 2).
+
+**0.2 Error type** — new `src-tauri/src/error.rs`: `#[derive(thiserror::Error, Debug)] pub enum FoldefyError { Io(#[from] std::io::Error), Db(#[from] rusqlite::Error), Serde(#[from] serde_json::Error), Ai(String), NotFound(String), Guard(String) }` + `impl serde::Serialize` (message string) so commands return `Result<T, FoldefyError>`. New code uses it; `String` errors migrate opportunistically.
+
+**0.3 SQLite layer** — Cargo.toml: `rusqlite = { version = "0.32", features = ["bundled"] }`, `r2d2`, `r2d2_sqlite`. New `src-tauri/src/db/mod.rs`: `pub type DbPool = r2d2::Pool<SqliteConnectionManager>; pub fn init(app_data_dir: &Path) -> Result<DbPool, FoldefyError>` — opens `foldefy.db`, `PRAGMA journal_mode=WAL`, runs numbered migrations from `db/migrations/001_init.sql` (`include_str!`) tracked in `schema_migrations`. Tables: `files(id PK, path UNIQUE, parent_id, name, ext, size, mtime, kind, drive, is_dir)`, `scan_runs(id, root, started_at, finished_at, stats_json)`, `move_journal(id, batch_id, kind, src, dst, size, mtime, status, error, executed_at)`, `recommendations(id, created_at, provider, root, json)`. Register in `lib.rs` `.setup()`: `app.manage(db::init(&app.path().app_data_dir()?)?)`.
+
+**0.4 Scanner unification** — create `src-tauri/src/core/mod.rs` + `core/scanner/{mod,skip_rules,project_detect,hotspots}.rs`. Move from `commands/scanning.rs`: skip-lists + registry app detection → `skip_rules.rs`; `detect_project_type` (~45 markers) → `project_detect.rs`; `smart_scan_recursive` + WSL scan → `scanner/mod.rs`; `commands/scanning.rs` keeps thin `#[tauri::command]` wrappers. Legacy `folder.rs::scan_directory`/`scan_recursive` deprecated now, deleted in task 1.9 (keep `save_annotation`/`load_annotations`/`export_structure_for_ai`). Scan writes `files` + `scan_runs` rows (keep `folder_index.json` as compatibility until frontend reads DB). Fix progress: count root's immediate subdirs first → `percentage = completed_top_dirs / total * 100`. New `hotspots.rs`: `pub struct Hotspot { path, loose_files, score, reason }; pub fn detect_hotspots(pool) -> Vec<Hotspot>` — loose-file count ≥ 30, extension entropy, ×2 weight Downloads/Desktop/Documents. Tests: skip_rules, project_detect, hotspots on `tempfile` trees.
+
+**0.5 Keyring migration** — Cargo.toml: `keyring = "3"`. New `core/secrets.rs`: `get_claude_key()/set_claude_key(&str)` (service "foldefy", user "claude_api_key"). In `ai.rs::load_ai_config_internal`: JSON key non-empty → write keyring, blank + resave JSON.
+
+## Phase 1 — concrete implementation tasks
+
+**1.1 Rewire orphaned Stage A flow** — `ProfileSetup.tsx`/`ConfirmationStep.tsx` completion → `appStore.setShowStorageScan(true)`; `App.tsx` renders `<StorageScanSetup>` when `showStorageScan`, `<AIRecommendation>` when `showAIRecommendation`; `ScanComplete.tsx` continue → `setShowAIRecommendation(true)`. Dashboard dead "AI Suggestions" card → `setShowAIRecommendation(true)`. Verify conditional order vs `profile?.onboarding_completed` in `App.tsx`.
+
+**1.2 `apply_structure`** — extract dir-creation + `{{var}}` substitution from `template.rs::apply_template` into `core/fs_ops/create_tree.rs` (`create_tree(root, nodes, vars, dry_run) -> TreeResult`). New `commands/structure.rs`: `apply_structure(recommendation: AIRecommendation, target_root: String, dry_run: bool) -> Result<ApplyResult, FoldefyError>`, `ApplyResult { created, skipped, errors }`; created dirs journaled (`kind='mkdir'`). `AIRecommendation.tsx` Apply → dry-run preview dialog → apply. Persist recommendation row.
+
+**1.3 Journal** — `core/sorter/journal.rs`: `create_batch()`, `record_planned()`, `mark_in_progress(id)` (flushed BEFORE each move), `mark_done/failed(id, err)`, `reconcile_on_startup(pool)` (stuck `in_progress`: file at dst → done, at src → failed) called from `.setup()`.
+
+**1.4 Executor** — `core/sorter/executor.rs`: `execute_plan(pool, app_handle, batch_id, filter)`. Per entry: mark_in_progress → same-volume `fs::rename`; cross-volume (Windows err 17) → copy + size verify + delete src; locked (sharing violation 32) → 2 retries/200 ms → `failed(skipped_locked)`; emit `sort-progress { batch_id, done, total, current }` every 10 files.
+
+**1.5 Rule classifier (no AI yet)** — `core/sorter/classifier.rs`: `classify_rules(files, profile, dests) -> Vec<Classified { file_id, dest, confidence, reason }>` — extension→category map, filename patterns (Screenshot*, IMG_*, invoice/factura*), profile-weighted categories. Unmatched → needs-review bucket.
+
+**1.6 Planner + guards** — `core/sorter/planner.rs`: `plan_sort(pool, scope: SortScope, dests) -> MovePlan`; collisions → `name (2).ext`. `core/sorter/guards.rs`: `is_protected(path) -> Option<GuardReason>` — Windows/, Program Files*, ProgramData, AppData (minus user dirs), project-marker dirs (reuse `project_detect`), registry install dirs (reuse `skip_rules`), OneDrive `FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS`, size cap. `SortScope = SelectedFolders(Vec<String>) | Hotspots | Everything`.
+
+**1.7 Undo** — `core/sorter/undo.rs`: `undo_batch/undo_folder/undo_file` — reverse via journal; dst modified since (size/mtime mismatch) → `status='conflict'`, never clobber; remove empty created dirs on full-batch undo.
+
+**1.8 Commands + IPC** — new `commands/sorting.rs`: `plan_sort, execute_plan, undo_batch, undo_folder, undo_file, list_batches, get_batch`; register (+`apply_structure`, `get_hotspots`) in `lib.rs::generate_handler!`. Mirror types (`MovePlan`, `PlannedMove`, `SortBatch`, `Hotspot`, `ApplyResult`) + wrappers in `src/lib/tauri.ts`.
+
+**1.9 Sorting UI** — new `src/stores/sortStore.ts` (plan/progress/batches; `listen("sort-progress")` mirroring `scanStore.startScan`). Rework `src/pages/Organize.tsx` → 3-step wizard (Scope/Mode/Run); new `src/components/sorting/{ScopePicker,ReviewPlan,SortProgress,UndoCenter}.tsx` (ReviewPlan reuses `RecommendedStructureTree` rendering; UndoCenter linked from `Header.tsx` + Dashboard). Delete legacy `folderStore` scan usage + `folder.rs::scan_directory`. i18n `sorting.*` keys ×5 locales.
+
+**1.10 Phase-1 gate test** — Rust integration test: 500-file synthetic Downloads tree (`tempfile`) → rule-classify → plan → execute → assert moved; `undo_batch` → byte-identical tree (walk+hash); same for undo_folder/undo_file; crash-recovery test (stop between in_progress and done, rerun reconcile).
+
+Phases 2–6 stay as summarized in the module sections; expand the same way when Phase 1 lands.
+
 ## Verification
 
 - Per-module: Rust unit/integration tests above; `pnpm tsc && vitest`; `pnpm tauri dev` manual flows.
-- Phase 1 gate: sort 500-file synthetic Downloads dir → auto-sort → undo all/folder/file → byte-identical tree restored (scripted temp-dir test).
+- Phase 1 gate: sort 500-file synthetic Downloads dir → auto-sort → undo all/folder/file → byte-identical tree restored (task 1.10).
 - Phase 2 gate: on an 8 GB VM (no GPU) and a GPU machine: model auto-select, download+resume+verify, Stage A recommendation < 60 s, GPU crash simulation → CPU fallback.
 - Phase 3 gate: golden-set classification accuracy ≥ target vs Claude baseline; low-confidence routed to review.
 - Phase 5 gate: publish → fetch → apply community template round-trip; RLS negative tests.
