@@ -116,11 +116,18 @@ fn worker(path: PathBuf, rx: mpsc::Receiver<Job>) {
 
     // GPU when Vulkan is usable, with a CPU retry if the GPU load fails
     // (bad drivers must never brick the app).
-    let n_gpu_layers: u32 = if crate::core::hw::detect().vulkan_available {
-        1_000_000
-    } else {
-        0
-    };
+    let hw = crate::core::hw::detect();
+    eprintln!(
+        "Local AI engine starting: RAM {} MB, Vulkan {}, GPUs: {}",
+        hw.total_ram_mb,
+        hw.vulkan_available,
+        hw.gpus
+            .iter()
+            .map(|g| format!("{} ({} MB VRAM)", g.name, g.dedicated_vram_mb))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+    let n_gpu_layers: u32 = if hw.vulkan_available { 1_000_000 } else { 0 };
     let model = load_model(backend, &path, n_gpu_layers).or_else(|first_err| {
         if n_gpu_layers > 0 {
             eprintln!("GPU model load failed ({}), retrying on CPU", first_err);
@@ -129,19 +136,46 @@ fn worker(path: PathBuf, rx: mpsc::Receiver<Job>) {
             Err(first_err)
         }
     });
-    let model = match model {
+    let mut model = match model {
         Ok(m) => m,
         Err(e) => {
             drain_with_error(&rx, &format!("failed to load model: {}", e));
             return;
         }
     };
+    let mut on_gpu = n_gpu_layers > 0;
 
     while let Ok(job) = rx.recv() {
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let mut result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             run_one(backend, &model, &job)
         }))
         .unwrap_or_else(|_| Err("local AI engine crashed during inference".to_string()));
+
+        // Some GPUs load the weights fine (into shared memory) but cannot
+        // allocate the inference buffers — reload fully on CPU and retry.
+        if on_gpu {
+            if let Err(e) = &result {
+                if e.contains("context creation failed") || e.contains("crashed") {
+                    eprintln!("GPU inference failed ({}), reloading model on CPU", e);
+                    match load_model(backend, &path, 0) {
+                        Ok(cpu_model) => {
+                            model = cpu_model;
+                            on_gpu = false;
+                            result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                                run_one(backend, &model, &job)
+                            }))
+                            .unwrap_or_else(|_| {
+                                Err("local AI engine crashed during inference".to_string())
+                            });
+                        }
+                        Err(reload_err) => {
+                            eprintln!("CPU reload also failed: {}", reload_err);
+                        }
+                    }
+                }
+            }
+        }
+
         let _ = job.reply.send(result);
     }
 }
