@@ -196,17 +196,31 @@ fn load_ai_config_internal() -> Result<Option<AIConfig>, String> {
     let data_dir = get_data_dir()?;
     let config_path = data_dir.join("ai_config.json");
 
-    if !config_path.exists() {
+    // One-time migration: move a legacy plaintext key from ai_config.json
+    // into the OS credential store and blank it in the file.
+    if config_path.exists() {
+        let json = fs::read_to_string(&config_path)
+            .map_err(|e| format!("Failed to read AI config: {}", e))?;
+        let mut config: AIConfig =
+            serde_json::from_str(&json).map_err(|e| format!("Failed to parse AI config: {}", e))?;
+
+        if let Some(key) = config.api_key.take() {
+            if !key.is_empty() {
+                crate::core::secrets::set_claude_key(&key).map_err(|e| e.to_string())?;
+                let blanked = serde_json::to_string_pretty(&config)
+                    .map_err(|e| format!("Failed to serialize AI config: {}", e))?;
+                fs::write(&config_path, blanked)
+                    .map_err(|e| format!("Failed to write AI config: {}", e))?;
+            }
+        }
+    }
+
+    let key = crate::core::secrets::get_claude_key();
+    if key.is_none() && !config_path.exists() {
         return Ok(None);
     }
 
-    let json =
-        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read AI config: {}", e))?;
-
-    let config: AIConfig =
-        serde_json::from_str(&json).map_err(|e| format!("Failed to parse AI config: {}", e))?;
-
-    Ok(Some(config))
+    Ok(Some(AIConfig { api_key: key }))
 }
 
 #[tauri::command]
@@ -214,7 +228,12 @@ pub async fn save_ai_config(config: AIConfig) -> Result<(), String> {
     let data_dir = get_data_dir()?;
     let config_path = data_dir.join("ai_config.json");
 
-    let json = serde_json::to_string_pretty(&config)
+    // The key lives in the OS credential store; the JSON file never holds it.
+    crate::core::secrets::set_claude_key(config.api_key.as_deref().unwrap_or(""))
+        .map_err(|e| e.to_string())?;
+
+    let sanitized = AIConfig { api_key: None };
+    let json = serde_json::to_string_pretty(&sanitized)
         .map_err(|e| format!("Failed to serialize AI config: {}", e))?;
 
     fs::write(&config_path, json).map_err(|e| format!("Failed to write AI config: {}", e))?;

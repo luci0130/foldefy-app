@@ -1,4 +1,5 @@
 mod commands;
+mod core;
 mod db;
 mod error;
 mod models;
