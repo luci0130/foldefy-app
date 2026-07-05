@@ -215,8 +215,14 @@ pub async fn export_structure_for_ai(path: String) -> Result<AIExportData, Strin
             .map_err(|e| format!("Failed to parse profile: {}", e))?
     } else {
         UserProfile {
+            language: "en".to_string(),
             usage_type: "personal".to_string(),
             activities: Vec::new(),
+            project_types: Vec::new(),
+            organization_style: Vec::new(),
+            primary_file_types: Vec::new(),
+            storage_habits: None,
+            custom_notes: None,
             onboarding_completed: false,
             created_at: chrono::Utc::now().to_rfc3339(),
         }
