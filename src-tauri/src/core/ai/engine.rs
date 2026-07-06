@@ -22,17 +22,11 @@ use std::time::Duration;
 const CTX_LADDER: [(u32, u32); 3] = [(8192, 2048), (4096, 1024), (2048, 512)];
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(600);
 
-/// Generic JSON grammar (GBNF): the model physically cannot emit anything
-/// but a valid JSON object — the reliability lever for small local models.
-const JSON_GRAMMAR: &str = r#"
-root ::= object
-value ::= object | array | string | number | ("true" | "false" | "null") ws
-object ::= "{" ws ( string ":" ws value ("," ws string ":" ws value)* )? "}" ws
-array ::= "[" ws ( value ("," ws value)* )? "]" ws
-string ::= "\"" ( [^"\\\x7F\x00-\x1F] | "\\" (["\\bfnrt] | "u" [0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F]) )* "\"" ws
-number ::= ("-"? ([0-9] | [1-9] [0-9]*)) ("." [0-9]+)? ([eE] [-+]? [0-9]+)? ws
-ws ::= [ \t\n]*
-"#;
+// NOTE: GBNF grammar-constrained sampling was removed for now — this
+// llama.cpp version aborts the whole process (GGML_ASSERT(!stacks.empty())
+// in llama-grammar.cpp) on the first sampled token with our JSON grammar.
+// JSON quality relies on the prompt + greedy sampling + the lenient parser
+// in claude.rs; re-introduce a grammar once the upstream crash is resolved.
 
 struct Job {
     system: String,
@@ -310,18 +304,15 @@ fn run_one(backend: &LlamaBackend, model: &LlamaModel, job: &Job) -> Result<Stri
         pos += chunk.len();
     }
 
-    let grammar = LlamaSampler::grammar(model, JSON_GRAMMAR, "root")
-        .map_err(|e| format!("grammar compile failed: {}", e))?;
-    let mut sampler = LlamaSampler::chain_simple([grammar, LlamaSampler::greedy()]);
+    let mut sampler = LlamaSampler::greedy();
 
     let mut output = String::new();
     let mut decoder = encoding_rs::UTF_8.new_decoder();
     // Next absolute position = prompt length (batch holds only the last chunk)
     let mut n_cur = total as i32;
 
-    // JSON completion tracking: once the root object closes, the grammar
-    // has no legal continuation and feeding it further tokens makes
-    // llama.cpp abort the process (GGML_ASSERT(!stacks.empty())).
+    // JSON completion tracking: stop cleanly at the closing brace of the
+    // root object so the model cannot append trailing chatter.
     let mut depth = 0i32;
     let mut started = false;
     let mut in_string = false;
@@ -330,7 +321,6 @@ fn run_one(backend: &LlamaBackend, model: &LlamaModel, job: &Job) -> Result<Stri
     for _ in 0..job.max_tokens {
         let token = sampler.sample(&ctx, batch.n_tokens() - 1);
 
-        // EOG must not be accepted into the grammar (same abort)
         if model.is_eog_token(token) {
             break;
         }
