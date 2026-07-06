@@ -11,16 +11,22 @@ pub struct AIConfig {
     pub local_model_id: Option<String>,
 }
 
+// Models (especially small local ones) omit optional-feeling fields like
+// `children` on leaf folders — accept that instead of failing the parse.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecommendedFolder {
     pub name: String,
+    #[serde(default)]
     pub description: String,
+    #[serde(default)]
     pub children: Vec<RecommendedFolder>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIRecommendation {
     pub recommended_structure: Vec<RecommendedFolder>,
+    #[serde(default)]
     pub explanation: String,
+    #[serde(default)]
     pub tips: Vec<String>,
 }
