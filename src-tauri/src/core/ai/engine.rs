@@ -319,18 +319,47 @@ fn run_one(backend: &LlamaBackend, model: &LlamaModel, job: &Job) -> Result<Stri
     // Next absolute position = prompt length (batch holds only the last chunk)
     let mut n_cur = total as i32;
 
+    // JSON completion tracking: once the root object closes, the grammar
+    // has no legal continuation and feeding it further tokens makes
+    // llama.cpp abort the process (GGML_ASSERT(!stacks.empty())).
+    let mut depth = 0i32;
+    let mut started = false;
+    let mut in_string = false;
+    let mut escaped = false;
+
     for _ in 0..job.max_tokens {
         let token = sampler.sample(&ctx, batch.n_tokens() - 1);
-        sampler.accept(token);
 
+        // EOG must not be accepted into the grammar (same abort)
         if model.is_eog_token(token) {
             break;
         }
+        sampler.accept(token);
 
         let piece = model
             .token_to_piece(token, &mut decoder, false, None)
             .unwrap_or_default();
         output.push_str(&piece);
+
+        for ch in piece.chars() {
+            if escaped {
+                escaped = false;
+                continue;
+            }
+            match ch {
+                '\\' if in_string => escaped = true,
+                '"' => in_string = !in_string,
+                '{' if !in_string => {
+                    depth += 1;
+                    started = true;
+                }
+                '}' if !in_string => depth -= 1,
+                _ => {}
+            }
+        }
+        if started && depth == 0 {
+            break;
+        }
 
         batch.clear();
         batch
