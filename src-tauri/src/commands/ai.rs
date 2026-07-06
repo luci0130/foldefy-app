@@ -61,22 +61,32 @@ pub async fn generate_ai_recommendation(
     app_handle: AppHandle,
 ) -> Result<AIRecommendation, String> {
     let config = load_ai_config_internal()?;
-    let request = JsonRequest {
-        system: prompts::RECOMMENDATION_SYSTEM.to_string(),
-        prompt: prompts::build_recommendation_prompt(&user_profile, &folder_index),
-        max_tokens: 4096,
-    };
+    let base_prompt = prompts::build_recommendation_prompt(&user_profile, &folder_index);
 
     let requested = config
         .as_ref()
         .and_then(|c| c.provider.clone())
         .unwrap_or_else(|| "local".to_string());
 
+    let mut request = JsonRequest {
+        system: prompts::RECOMMENDATION_SYSTEM.to_string(),
+        prompt: base_prompt,
+        max_tokens: 6144,
+    };
+
     // Resolve the provider: local when requested AND the engine + a model
     // are available; otherwise Claude with a configured key.
     let provider: Box<dyn AiProvider> = if requested == "local" {
         match active_local_model(&app_handle, &config).and_then(LocalLlamaProvider::try_new) {
-            Some(local) => Box::new(local),
+            Some(local) => {
+                // Small local models drift into very deep, verbose structures
+                // and run out of tokens — constrain the output size.
+                request.prompt.push_str(
+                    "\n\nIMPORTANT: Keep the output compact: at most 2 levels of nesting, \
+                     at most 20 folders in total, and each description under 8 words.",
+                );
+                Box::new(local)
+            }
             None => match get_api_key(&custom_api_key) {
                 Some(key) => Box::new(ClaudeProvider::new(key)),
                 None => {

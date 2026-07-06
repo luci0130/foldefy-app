@@ -318,7 +318,12 @@ fn run_one(backend: &LlamaBackend, model: &LlamaModel, job: &Job) -> Result<Stri
     let mut in_string = false;
     let mut escaped = false;
 
-    for _ in 0..job.max_tokens {
+    // Never generate past the context window (prompt + output <= n_ctx)
+    let max_gen = job
+        .max_tokens
+        .min(n_ctx.saturating_sub(tokens.len() as u32 + 8));
+
+    for _ in 0..max_gen {
         let token = sampler.sample(&ctx, batch.n_tokens() - 1);
 
         if model.is_eog_token(token) {

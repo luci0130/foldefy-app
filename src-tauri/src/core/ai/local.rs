@@ -40,6 +40,14 @@ impl AiProvider for LocalLlamaProvider {
         .await
         .map_err(|e| FoldefyError::Ai(format!("local inference task failed: {}", e)))??;
 
-        parse_json_lenient(&text)
+        let value = parse_json_lenient(&text);
+        if value.is_err() {
+            eprintln!(
+                "Local model output failed JSON parsing ({} chars):\n{}",
+                text.len(),
+                text
+            );
+        }
+        value
     }
 }
