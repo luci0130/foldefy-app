@@ -127,7 +127,46 @@ fn worker(path: PathBuf, rx: mpsc::Receiver<Job>) {
             .collect::<Vec<_>>()
             .join(", ")
     );
-    let n_gpu_layers: u32 = if hw.vulkan_available { 1_000_000 } else { 0 };
+
+    // llama.cpp aborts the whole process on some GPU allocation failures —
+    // catch_unwind cannot intercept that. Two defenses:
+    // 1. VRAM preflight: skip the GPU when the model + headroom can't fit
+    //    in dedicated VRAM.
+    // 2. Persistent crash marker: written before the GPU attempt, removed
+    //    after the first successful GPU inference. If the process dies,
+    //    the next launch goes straight to CPU.
+    let model_size_mb = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0) / (1024 * 1024);
+    let max_vram_mb = hw
+        .gpus
+        .iter()
+        .filter(|g| !g.is_software)
+        .map(|g| g.dedicated_vram_mb)
+        .max()
+        .unwrap_or(0);
+    let crash_marker = path
+        .parent()
+        .and_then(|p| p.parent())
+        .map(|p| p.join(".gpu-disabled"));
+    let marker_present = crash_marker.as_ref().map(|m| m.exists()).unwrap_or(false);
+    let needed_vram_mb = model_size_mb + 768; // weights + KV cache + compute buffers
+
+    let gpu_viable = hw.vulkan_available && max_vram_mb >= needed_vram_mb && !marker_present;
+    if hw.vulkan_available && !gpu_viable {
+        if marker_present {
+            eprintln!("GPU disabled: a previous GPU attempt crashed (delete the .gpu-disabled file in the models folder to retry)");
+        } else {
+            eprintln!(
+                "GPU skipped: {} MB VRAM available, ~{} MB needed for this model — running on CPU",
+                max_vram_mb, needed_vram_mb
+            );
+        }
+    }
+    if gpu_viable {
+        if let Some(marker) = &crash_marker {
+            let _ = std::fs::write(marker, "GPU attempt in progress");
+        }
+    }
+    let n_gpu_layers: u32 = if gpu_viable { 1_000_000 } else { 0 };
     let model = load_model(backend, &path, n_gpu_layers).or_else(|first_err| {
         if n_gpu_layers > 0 {
             eprintln!("GPU model load failed ({}), retrying on CPU", first_err);
@@ -150,6 +189,14 @@ fn worker(path: PathBuf, rx: mpsc::Receiver<Job>) {
             run_one(backend, &model, &job)
         }))
         .unwrap_or_else(|_| Err("local AI engine crashed during inference".to_string()));
+
+        // First successful GPU inference proves this GPU works — clear the
+        // crash marker so future launches keep using it.
+        if on_gpu && result.is_ok() {
+            if let Some(marker) = &crash_marker {
+                let _ = std::fs::remove_file(marker);
+            }
+        }
 
         // Some GPUs load the weights fine (into shared memory) but cannot
         // allocate the inference buffers — reload fully on CPU and retry.
